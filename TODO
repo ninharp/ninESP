@@ -1,0 +1,13 @@
++ Reset after change/set Network
++ Setup AJAX not working correctly
++ More Settings in AJAX Web
++ Display of current settings and states
+
++ Split source to different files and make it modular to specifiy different types of clients
+
++ Define MQTT Topic Structure
+
++ Add LED Control
++ Add Motion Sensor
+	+ PIR Sensor
+	+ Ultrasonic Sensor

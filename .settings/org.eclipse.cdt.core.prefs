@@ -1,0 +1,9 @@
+eclipse.preferences.version=1
+environment/project/cdt.managedbuild.toolchain.gnu.mingw.base.1135534147/ESP_HOME/delimiter=\:
+environment/project/cdt.managedbuild.toolchain.gnu.mingw.base.1135534147/ESP_HOME/operation=append
+environment/project/cdt.managedbuild.toolchain.gnu.mingw.base.1135534147/ESP_HOME/value=/opt/esp-open-sdk
+environment/project/cdt.managedbuild.toolchain.gnu.mingw.base.1135534147/SMING_HOME/delimiter=\:
+environment/project/cdt.managedbuild.toolchain.gnu.mingw.base.1135534147/SMING_HOME/operation=append
+environment/project/cdt.managedbuild.toolchain.gnu.mingw.base.1135534147/SMING_HOME/value=/opt/sming/Sming
+environment/project/cdt.managedbuild.toolchain.gnu.mingw.base.1135534147/append=true
+environment/project/cdt.managedbuild.toolchain.gnu.mingw.base.1135534147/appendContributed=true
