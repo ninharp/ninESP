@@ -5,6 +5,7 @@
 #include <AppSettings.h>
 #include <Libraries/RCSwitch/RCSwitch.h>
 #include <RelaySwitch.h>
+#include <ninMQTTClient.h>
 /*
  *
  * if (mqtt.getConnectionState() != eTCS_Connected)
@@ -34,7 +35,7 @@ void connectFail(String ssid, uint8_t ssidLength, uint8_t *bssid, uint8_t reason
 
 // MQTT client
 // For quickly check you can use: http://www.hivemq.com/demos/websocket-client/ (Connection= test.mosquitto.org:8080)
-MqttClient mqtt(DEFAULT_MQTT_SERVER, 1883, onMessageReceived);
+ninMqttClient mqtt(DEFAULT_MQTT_SERVER, DEFAULT_MQTT_PORT, onMessageReceived);
 
 // Callback for messages, arrived from MQTT server
 void onMessageReceived(String topic, String message)
@@ -74,11 +75,11 @@ void startMqttClient()
 		debugf("Unable to set the last will and testament. Most probably there is not enough memory on the device.");
 	}
 	mqtt.setHost(AppSettings.mqtt_server);
-	//mqtt.setPort(AppSettings.mqtt_port);
+	mqtt.setPort(AppSettings.mqtt_port);
 	mqtt.connect(AppSettings.mqtt_userid, AppSettings.mqtt_login, AppSettings.mqtt_password);
 	mqtt.subscribe(AppSettings.mqtt_topic_cmd);
 	//mqtt.publish(AppSettings.mqtt_topic_pub, "online");
-	mqtt.publishWithQoS(AppSettings.mqtt_topic_lwt,"online",1,true);
+	mqtt.publishWithQoS(AppSettings.mqtt_topic_lwt, "online", 1, true);
 }
 
 void onIndex(HttpRequest &request, HttpResponse &response)
@@ -91,7 +92,7 @@ void onIndex(HttpRequest &request, HttpResponse &response)
 void onReboot(HttpRequest &request, HttpResponse &response)
 {
 	debugf("Restarting...");
-	WDT.enable(false);
+	WDT.enable(true);
 	System.restart();
 }
 
@@ -163,10 +164,8 @@ void onPeriphConfig(HttpRequest &request, HttpResponse &response)
 				if (mqtt.getConnectionState() != eTCS_Connected)
 						startMqttClient(); // Auto reconnect
 
-				//mqtt.unsubscribe(AppSettings.relay_topic_old);
+				mqtt.unsubscribe(AppSettings.relay_topic_old);
 				mqtt.subscribe(AppSettings.relay_topic);
-				//mqtt.publish(AppSettings.relay_topic, "0", true);
-				debugf("Blupp BBBBBBBBBBBBBBBBBBBB");
 				AppSettings.relay_topic_old = AppSettings.relay_topic;
 			} else {
 				// TODO: show error with ajax
@@ -594,8 +593,6 @@ void init()
 		debugf("No Settings found. Starting Setup Mode");
 		startAP();
 	}
-
-	//int a = system_adc_read();
 
 	// Run WEB server on system ready
 	System.onReady(startServers);

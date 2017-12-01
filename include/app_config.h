@@ -14,7 +14,7 @@
 #define RESET_PIN 13
 
 #define DEFAULT_MQTT_SERVER "test.mosquitto.org"
-#define DEFAULT_MQTT_PORT "1883"
+#define DEFAULT_MQTT_PORT 1883
 #define DEFAULT_MQTT_LWT "lwt/client/id"
 #define DEFAULT_MQTT_CMD "lwt/#"
 #define DEFAULT_MQTT_PUB "default/topic"

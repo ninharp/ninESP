@@ -3,7 +3,6 @@
 	<name>ninHOME_MQTT_Client_Web</name>
 	<comment></comment>
 	<projects>
-		<project>SmingFramework</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
