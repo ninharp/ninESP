@@ -1,13 +1,18 @@
-+ Reset after change/set Network
-+ Setup AJAX not working correctly
-+ More Settings in AJAX Web
++ Reset after change/set Network (automatically or triggered from webinterface)
++ Setup AJAX not working correctly, fixing
++ More Settings in AJAX Web, structure!?
 + Display of current settings and states
-
-+ Split source to different files and make it modular to specifiy different types of clients
++ Implement UDP Server and define protocol
 
 + Define MQTT Topic Structure
 
-+ Add LED Control
-+ Add Motion Sensor
-	+ PIR Sensor
++ Add more Peripheral "Modules"
+    + Add LED Control
+    + Add Motion Sensor
+    	+ PIR Sensor
 	+ Ultrasonic Sensor
+
++ Split source to different files and make it modular to specifiy different types of clients
+  + Namespaces, Classes, ... default MQTT Structure
+
++ Make project comments doxygen conform
