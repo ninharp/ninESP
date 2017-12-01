@@ -23,7 +23,8 @@ Any contribution is very warm welcome...
 
 # Screenshots
 
-<screenshots here>
+![wifi networks](https://raw.github.com/ninharp/ninESP/master/doc/screenshots/web_networks.jpg "Wifi Network Settings")
+
 
 # Dependencies
 

@@ -59,7 +59,7 @@
     <div class="header">
         <nav>
             <ul class="nav nav-pills pull-right">
-            	 <li role="presentation"><a class="link" href="/reboot">Reboot System</a></li>
+            	 <li role="presentation"><a href="/reboot">Reboot System</a></li>
                 <li role="presentation"><a href="/">Networks</a></li>
                 <li role="presentation"><a href="/ipconfig">Settings</a></li>
                 <li role="presentation"><a href="/periph" class="active">Peripherals</a></li>

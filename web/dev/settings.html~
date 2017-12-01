@@ -124,7 +124,7 @@
                         <div class="form-group">
                             <div class="checkbox">
                                <label>
-                				 		<input type="checkbox" name="udp_server" {relay_on}>
+                				 		<input type="checkbox" name="rcrelay" {rcrelay}>
                 				 		RC Relay
                 				 	</label>
                             </div>
