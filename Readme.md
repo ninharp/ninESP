@@ -23,8 +23,8 @@ Any contribution is very warm welcome...
 
 # Screenshots
 
-![wifi networks](https://raw.github.com/ninharp/ninESP/master/doc/screenshots/web_networks.jpg "Wifi Network Settings")
-
+![wifi networks](https://raw.github.com/ninharp/ninESP/master/doc/screenshots/web_networks_small.jpg "Wifi Network Settings")
+![mqtt settings](https://raw.github.com/ninharp/ninESP/master/doc/screenshots/web_mqtt.jpg "MQTT Settings")
 
 # Dependencies
 
