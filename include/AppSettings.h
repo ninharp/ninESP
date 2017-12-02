@@ -25,6 +25,11 @@ struct ApplicationSettingsStorage
 	String password;
 	bool dhcp = true;
 
+	bool udp = false;
+	String udp_port;
+	bool rcrelay = false;
+	int8_t rcrelay_pin = -1;
+
 	/* MQTT Config */
 	// General MQTT Config
 	String mqtt_server;
@@ -93,6 +98,14 @@ struct ApplicationSettingsStorage
 			netmask = network["netmask"].asString();
 			gateway = network["gateway"].asString();
 
+			udp = network["udp"].asString();
+			udp_port = network["udp_port"].asString();
+
+			JsonObject& rc = root["rcrelay"];
+
+			rcrelay = rc["enabled"].asString();
+			rcrelay_pin = String(rc["pin"].asString()).toInt();
+
 			delete[] jsonString;
 		}
 	}
@@ -124,8 +137,8 @@ struct ApplicationSettingsStorage
 	void loadPeriph()
 	{
 		DynamicJsonBuffer jsonBuffer;
-		if (existPeriph())
-		{
+		//if (existPeriph())
+		//{
 			int size = fileGetSize(APP_PERIPH_SETTINGS_FILE);
 			char* jsonString = new char[size + 1];
 			fileGetContent(APP_PERIPH_SETTINGS_FILE, jsonString, size + 1);
@@ -134,17 +147,17 @@ struct ApplicationSettingsStorage
 			JsonObject& periph = root["peripherals"];
 			timer_delay = atoi(periph["timer_delay"].asString());
 
-			relay = periph["relay"].asString();
-			adc = periph["adc"].asString();
-			temp_dht11 = periph["temp_dht11"].asString();
-			temp_ds18b20 = periph["temp_ds18b20"].asString();
-			temp_lm75 = periph["temp_lm75"].asString();
-			rcswitch = periph["rcswitch"].asString();
+			relay = periph["relay"];
+			adc = periph["adc"];
+			temp_dht11 = periph["temp_dht11"];
+			temp_ds18b20 = periph["temp_ds18b20"];
+			temp_lm75 = periph["temp_lm75"];
+			rcswitch = periph["rcswitch"];
 
-			adc_pub = periph["adc_pub"].asString();
-			temp_dht11_pub = periph["temp_dht11_pub"].asString();
-			temp_ds18b20_pub = periph["temp_ds18b20_pub"].asString();
-			temp_lm75_pub = periph["temp_lm75_pub"].asString();
+			adc_pub = periph["adc_pub"];
+			temp_dht11_pub = periph["temp_dht11_pub"];
+			temp_ds18b20_pub = periph["temp_ds18b20_pub"];
+			temp_lm75_pub = periph["temp_lm75_pub"];
 
 			relay_topic = periph["relay_topic"].asString();
 			adc_topic = periph["adc_topic"].asString();
@@ -178,7 +191,7 @@ struct ApplicationSettingsStorage
 			for (int i = 0; i < rcswitch_count; i++) {
 				debugf("rcswitch_dev[%d] = %s-%s", i, rcswitch_dev[i][0].c_str(), rcswitch_dev[i][1].c_str());
 			}
-		}
+		//}
 	}
 
 	void saveGlobal()
@@ -197,6 +210,15 @@ struct ApplicationSettingsStorage
 		network["ip"] = ip.toString();
 		network["netmask"] = netmask.toString();
 		network["gateway"] = gateway.toString();
+
+		network["udp"] = udp;
+		network["udp_port"] = udp_port;
+
+		JsonObject& rc = jsonBuffer.createObject();
+		root["rcrelay"] = rc;
+
+		rc["enabled"] = rcrelay;
+		rc["pin"] = rcrelay_pin;
 
 		String rootString;
 		root.printTo(rootString);

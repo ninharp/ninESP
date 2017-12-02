@@ -10,8 +10,8 @@
 
 #define NINHOME_AP_NAME "ninHome Configuration"
 
-#define LED_SETUP_PIN 5
-#define RESET_PIN 13
+#define LED_SETUP_PIN 5 //D1
+#define RESET_PIN 13 //D7
 
 #define DEFAULT_MQTT_SERVER "test.mosquitto.org"
 #define DEFAULT_MQTT_PORT 1883
@@ -26,15 +26,14 @@
 #define DEFAULT_FTP_PASS "123"
 #define DEFAULT_FTP_PORT 21
 
-#define DEFAULT_RELAY_PIN 5
+#define DEFAULT_UDP_PORT 1234
 
-#define RCSWITCH_TX_PIN 4
+#define DEFAULT_RELAY_PIN 14 //D5
+#define RCSWITCH_TX_PIN 4 //D2
 
 
 #define LWT_TOPIC "lwt/client/id5"
 #define SUBSCRIBE_TOPIC "lwt/#"
 //#define PUBLISH_TOPIC ""
-
-
 
 #endif /* INCLUDE_APP_CONFIG_H_ */

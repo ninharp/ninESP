@@ -1,6 +1,9 @@
 node_modules
 web/bak
 out
-web/build/.settings.conf
-web/build/.mqtt_settings.conf
-web/build/.periph_settings.conf
+out/firmware
+out/build
+web/*/.lastModified
+web/*/.settings.conf
+web/*/.mqtt_settings.conf
+web/*/.periph_settings.conf

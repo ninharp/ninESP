@@ -1,8 +1,10 @@
 + Reset after change/set Network (automatically or triggered from webinterface)
 + Setup AJAX not working correctly, fixing
 + More Settings in AJAX Web, structure!?
++ Error checking in ajax web
 + Display of current settings and states
 + Implement UDP Server and define protocol
++ Default topics for peripherals
 
 + Define MQTT Topic Structure
 
@@ -16,3 +18,11 @@
   + Namespaces, Classes, ... default MQTT Structure
 
 + Make project comments doxygen conform
+
+
+
+ISSUES
+######
+
+Split setting disabling on settings.html (javascript)
+
