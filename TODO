@@ -5,6 +5,7 @@
 + Display of current settings and states
 + Implement UDP Server and define protocol
 + Default topics for peripherals
++ Add services settings vars
 
 + Define MQTT Topic Structure
 
