@@ -2,7 +2,7 @@
  * RelaySwitch.cpp
  *
  *  Created on: 30.11.2017
- *      Author: michael
+ *      Author: Michael Sauer
  */
 
 #include "RelaySwitch.h"
@@ -42,5 +42,6 @@ void RelaySwitch::set(bool state)
 void RelaySwitch::toggle(void)
 {
 	digitalWrite(pin, !state);
+	//mqtt.publish(AppSettings.relay_topic_pub, "on", true);
 }
 

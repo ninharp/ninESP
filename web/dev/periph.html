@@ -26,33 +26,6 @@
     <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
 </head>
-<script>
-    $(document).ready(function () {
-        ToggleReadonly($('input[checked=checked]').val());
-        $('input[name=dhcp]').on('click', function(){
-            $('input[name=dhcp]').each(function(e){
-                $(e).removeAttr('checked');
-            })
-            $(this).attr('checked', 'checked');
-            ToggleReadonly($(this).val());
-        })
-    });
-
-    function ToggleReadonly(value){
-        if(value == '1'){
-            $('.form-control').each(function(){
-                $(this).attr('readonly', 'readonly');
-            })
-        }
-        else
-        {
-            $('.form-control').each(function(){
-                $(this).removeAttr('readonly');
-            })
-        }
-    }
-</script>
-
 <body>
 
 <div class="container">
@@ -96,7 +69,9 @@
                 				 	</label>
                 				 </div>
                             <label>Switch Command Topic</label>
-	                         <input class="form-control" style="width: 250px" type="text" name="topic_relay_pub" value="{topic_relay}">
+	                         <input class="form-control" style="width: 250px" type="text" name="topic_relay_cmd" value="{topic_relay_cmd}">
+	                         <label>Switch Publish Topic</label>
+	                         <input class="form-control" style="width: 250px" type="text" name="topic_relay_pub" value="{topic_relay_pub}">
                         </div>
                         <br/>
                         <div class="form-group">
@@ -181,6 +156,21 @@
 	                          <input class="form-control" style="width: 250px" type="text" name="topic_lm75_pub" value="{topic_lm75}">
                          </div>
                          <br/>
+                         <div class="form-group">
+                				 <div class="checkbox">
+                				 	<label>
+                				 		<input type="checkbox" name="rcswitch" {rcswitch_on}>
+                				 		RCSwitch Device
+                				 	</label>
+                				 </div>
+                				  <label>Device Pin</label>
+	                          <input class="form-control" style="width: 50px" type="text" name="rcswitch_pin" value="{rcswitch_pin}">
+                             <label>Command Topic</label>
+	                          <input class="form-control" style="width: 250px" type="text" name="topic_rcswitch" value="{topic_rcswitch}">
+	                          <br/>
+	                          <div class="rcdevices">{rcswitch_devs}</div>
+                         </div>
+                         <br/>
                     </div>
                     <div class="col-md-offset-3">
                     	  <input type="submit" class="btn btn-success">
@@ -191,7 +181,7 @@
         </div>
     </div>
     <footer class="footer">
-        <!--<p>&copy; Michael Sauer 2017</p>-->
+         <p>&copy; Michael Sauer, 2017 --- Last Edited: {lastedit}</p>
     </footer>
 
 </div> <!-- /container -->

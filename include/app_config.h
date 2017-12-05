@@ -10,8 +10,14 @@
 
 #define NINHOME_AP_NAME "ninHome Configuration"
 
-#define LED_SETUP_PIN 5 //D1
-#define RESET_PIN 13 //D7
+#define DEFAULT_MDNS_HOSTNAME "ninhome"
+#define DEFAULT_MDNS_SERVERNAME "ninHOME"
+#define DEFAULT_MDNS_SERVERPORT 80
+
+#define LED_SETUP_PIN 0 // 15/D8
+#define RESET_PIN 4 // 13/D7
+
+#define SENSOR_TIMER_INTERVAL 10
 
 #define DEFAULT_MQTT_SERVER "test.mosquitto.org"
 #define DEFAULT_MQTT_PORT 1883
@@ -30,7 +36,9 @@
 
 #define DEFAULT_RELAY_PIN 14 //D5
 #define RCSWITCH_TX_PIN 4 //D2
+#define KEY_INPUT_PIN 5 //D1
 
+#define DEFAULT_KEY_POLL_INTERVAL 100
 
 #define LWT_TOPIC "lwt/client/id5"
 #define SUBSCRIBE_TOPIC "lwt/#"

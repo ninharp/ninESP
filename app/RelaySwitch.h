@@ -2,7 +2,7 @@
  * RelaySwitch.h
  *
  *  Created on: 30.11.2017
- *      Author: michael
+ *      Author: Michael Sauer
  */
 
 #include <SmingCore/SmingCore.h>

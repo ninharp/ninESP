@@ -26,33 +26,6 @@
     <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
 </head>
-<script>
-    $(document).ready(function () {
-        ToggleReadonly($('input[checked=checked]').val());
-        $('input[name=dhcp]').on('click', function(){
-            $('input[name=dhcp]').each(function(e){
-                $(e).removeAttr('checked');
-            })
-            $(this).attr('checked', 'checked');
-            ToggleReadonly($(this).val());
-        })
-    });
-
-    function ToggleReadonly(value){
-        if(value == '1'){
-            $('.form-control').each(function(){
-                $(this).attr('readonly', 'readonly');
-            })
-        }
-        else
-        {
-            $('.form-control').each(function(){
-                $(this).removeAttr('readonly');
-            })
-        }
-    }
-</script>
-
 <body>
 
 <div class="container">
@@ -124,7 +97,7 @@
         </div>
     </div>
     <footer class="footer">
-        <!--<p>&copy; Michael Sauer 2017</p>-->
+         <p>&copy; Michael Sauer, 2017 --- Last Edited: {lastedit}</p>
     </footer>
 
 </div> <!-- /container -->

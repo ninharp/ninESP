@@ -28,25 +28,35 @@
 </head>
 <script>
     $(document).ready(function () {
-        ToggleReadonly($('input[checked=checked]').val());
+        ToggleReadonly('.form-control-dhcp', $('input[checked=checked]').val());
         $('input[name=dhcp]').on('click', function(){
             $('input[name=dhcp]').each(function(e){
                 $(e).removeAttr('checked');
             })
             $(this).attr('checked', 'checked');
-            ToggleReadonly($(this).val());
+            ToggleReadonly('.form-control-dhcp', $(this).val());
+        });
+		  ToggleReadonly('.form-control-udp', $('input[checked=checked]').checked);
+        $('input[name=udp]').on('click', function(){
+        		if ($(this).checked == true) {
+            	ToggleReadonly('.form-control-udp', 1);
+            } 
+            else
+            {
+            	ToggleReadonly('.form-control-udp', 0);
+            }
         })
     });
 
-    function ToggleReadonly(value){
-        if(value == '1'){
-            $('.form-control').each(function(){
+    function ToggleReadonly(what, value){
+        if(value == '1' || value == true){
+            $(what).each(function(){
                 $(this).attr('readonly', 'readonly');
             })
         }
         else
         {
-            $('.form-control').each(function(){
+            $(what).each(function(){
                 $(this).removeAttr('readonly');
             })
         }
@@ -93,15 +103,15 @@
                         </div>
                         <div class="form-group">
                             <label>IP Address</label>
-                            <input class="form-control" style="width: 250px" type="text" name="ip" value="{ip}">
+                            <input class="form-control-dhcp" style="width: 250px" type="text" name="ip" value="{ip}">
                         </div>
                         <div class="form-group">
                             <label>Network Mask</label>
-                            <input class="form-control" style="width: 250px" type="text" name="netmask" value="{netmask}">
+                            <input class="form-control-dhcp" style="width: 250px" type="text" name="netmask" value="{netmask}">
                         </div>
                         <div class="form-group">
                             <label>Gateway</label>
-                            <input class="form-control" style="width: 250px" type="text" name="gateway" value="{gateway}">
+                            <input class="form-control-dhcp" style="width: 250px" type="text" name="gateway" value="{gateway}">
                         </div>
                     </div>
                 </fieldset>
@@ -111,27 +121,14 @@
                         <div class="form-group">
                             <div class="checkbox">
                                <label>
-                				 		<input type="checkbox" name="udp" {udp}>
+                				 		<input type="checkbox" name="udp">
                 				 		UDP Server
                 				 	</label>
                             </div>
                         </div>
                         <div class="form-group col-md-offset-1">
                             <label>UDP Port</label>
-                            <input class="form-control" style="width: 100px" type="text" name="udpport" value="{udpport}">
-                        </div>
-                        
-                        <div class="form-group">
-                            <div class="checkbox">
-                               <label>
-                				 		<input type="checkbox" name="rcrelay" {rcrelay}>
-                				 		RC Relay
-                				 	</label>
-                            </div>
-                        </div>
-                        <div class="form-group col-md-offset-1">
-                            <label>RC Transmission Pin</label>
-                            <input class="form-control" style="width: 50px" type="text" name="rcpin" value="{rcpin}">
+                            <input class="form-control-udp" style="width: 100px" type="text" name="udpport" value="{udpport}">
                         </div>
                     </div>
                 </fieldset>
@@ -142,7 +139,7 @@
         </div>
     </div>
     <footer class="footer">
-        <!--<p>&copy; Michael Sauer 2017</p>-->
+         <p>&copy; Michael Sauer, 2017 --- Last Edited: {lastedit}</p>
     </footer>
 
 </div> <!-- /container -->

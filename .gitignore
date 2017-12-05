@@ -1,9 +1,8 @@
 node_modules
 web/bak
-out
-out/firmware
-out/build
+out/*
 web/*/.lastModified
 web/*/.settings.conf
 web/*/.mqtt_settings.conf
 web/*/.periph_settings.conf
+temp
