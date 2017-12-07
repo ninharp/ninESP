@@ -11,7 +11,7 @@
 #include "ninMQTTClient.h"
 #include <SmingCore.h>
 
-ninMqttClient::ninMqttClient(String serverHost, int serverPort, ninMqttStringSubscriptionCallback callback /* = NULL*/)
+ninMqttClient::ninMqttClient(String serverHost, int serverPort, bool enabled, ninMqttStringSubscriptionCallback callback /* = NULL*/)
 	: TcpClient((bool)false)
 {
 	server = serverHost;
@@ -20,10 +20,12 @@ ninMqttClient::ninMqttClient(String serverHost, int serverPort, ninMqttStringSub
 	waitingSize = 0;
 	posHeader = 0;
 	current = NULL;
-	mqtt_init(&broker);
+	this->enabled = enabled;
+	if (enabled)
+		mqtt_init(&broker);
 }
 
-ninMqttClient::ninMqttClient(IPAddress serverIp, int serverPort, ninMqttStringSubscriptionCallback callback /* = NULL*/)
+ninMqttClient::ninMqttClient(IPAddress serverIp, int serverPort, bool enabled, ninMqttStringSubscriptionCallback callback /* = NULL*/)
 	: TcpClient((bool)false)
 {
 	this->serverIp = serverIp;
@@ -32,7 +34,9 @@ ninMqttClient::ninMqttClient(IPAddress serverIp, int serverPort, ninMqttStringSu
 	waitingSize = 0;
 	posHeader = 0;
 	current = NULL;
-	mqtt_init(&broker);
+	this->enabled = enabled;
+	if (enabled)
+		mqtt_init(&broker);
 }
 
 ninMqttClient::~ninMqttClient()
@@ -55,12 +59,18 @@ void ninMqttClient::setPingRepeatTime(int seconds)
 
 bool ninMqttClient::setWill(const String& topic, const String& message, int QoS, bool retained /* = false*/)
 {
-	return mqtt_set_will(&broker, topic.c_str(), message.c_str(), QoS, retained);
+	if (enabled)
+		return mqtt_set_will(&broker, topic.c_str(), message.c_str(), QoS, retained);
+	else
+		return false;
 }
 
 bool ninMqttClient::connect(const String& clientName, boolean useSsl /* = false */, uint32_t sslOptions /* = 0 */)
 {
-	return ninMqttClient::connect(clientName, "", "", useSsl, sslOptions);
+	if (enabled)
+		return ninMqttClient::connect(clientName, "", "", useSsl, sslOptions);
+	else
+		return false;
 }
 
 bool ninMqttClient::connect(const String& clientName, const String& username, const String& password, boolean useSsl /* = false */, uint32_t sslOptions /* = 0 */)
@@ -71,46 +81,59 @@ bool ninMqttClient::connect(const String& clientName, const String& username, co
 		debugf("MQTT closed previous connection");
 	}
 
-	debugf("MQTT start connection");
-	if (clientName.length() > 0)
-		 mqtt_set_clientid(&broker, clientName.c_str());
+	if (enabled) {
+		debugf("MQTT start connection");
 
-	if (username.length() > 0)
-		mqtt_init_auth(&broker, username.c_str(), password.c_str());
+		if (clientName.length() > 0)
+			 mqtt_set_clientid(&broker, clientName.c_str());
 
-	if(server.length() > 0 ) {
-		TcpClient::connect(server, port, useSsl, sslOptions);
+		if (username.length() > 0)
+			mqtt_init_auth(&broker, username.c_str(), password.c_str());
+
+		if(server.length() > 0 ) {
+			TcpClient::connect(server, port, useSsl, sslOptions);
+		}
+		else {
+			TcpClient::connect(serverIp, port, useSsl, sslOptions);
+		}
+
+		mqtt_set_alive(&broker, keepAlive);
+		broker.socket_info = (void*)this;
+		broker.send = staticSendPacket;
+
+		int res = mqtt_connect(&broker);
+		setTimeOut(USHRT_MAX);
+		return res > 0;
+	} else {
+		return false;
 	}
-	else {
-		TcpClient::connect(serverIp, port, useSsl, sslOptions);
-	}
-
-	mqtt_set_alive(&broker, keepAlive);
-	broker.socket_info = (void*)this;
-	broker.send = staticSendPacket;
-
-	int res = mqtt_connect(&broker);
-	setTimeOut(USHRT_MAX);
-	return res > 0;
 }
 
 bool ninMqttClient::publish(String topic, String message, bool retained /* = false*/)
 {
-	int res = mqtt_publish(&broker, topic.c_str(), message.c_str(), retained);
-	return res > 0;
+	if (enabled) {
+		int res = mqtt_publish(&broker, topic.c_str(), message.c_str(), retained);
+		return res > 0;
+	} else {
+		return false;
+	}
 }
 
 bool ninMqttClient::publishWithQoS(String topic, String message, int QoS, bool retained /* = false*/, MqttMessageDeliveredCallback onDelivery /* = NULL */)
 {
-	uint16_t msgId = 0;
-	int res = mqtt_publish_with_qos(&broker, topic.c_str(), message.c_str(), retained, QoS, &msgId);
-	if(QoS == 0 && onDelivery) {
-		debugf("The delivery callback is ignored for QoS 0.");
+	if (enabled) {
+		uint16_t msgId = 0;
+		int res = mqtt_publish_with_qos(&broker, topic.c_str(), message.c_str(), retained, QoS, &msgId);
+		if(QoS == 0 && onDelivery) {
+			debugf("The delivery callback is ignored for QoS 0.");
+		}
+		else if(QoS >0 && onDelivery && msgId) {
+			onDeliveryQueue[msgId] = onDelivery;
+		}
+		return res > 0;
+	} else {
+		return false;
 	}
-	else if(QoS >0 && onDelivery && msgId) {
-		onDeliveryQueue[msgId] = onDelivery;
-	}
-	return res > 0;
 }
 
 int ninMqttClient::staticSendPacket(void* userInfo, const void* buf, unsigned int count)
@@ -123,18 +146,26 @@ int ninMqttClient::staticSendPacket(void* userInfo, const void* buf, unsigned in
 
 bool ninMqttClient::subscribe(const String& topic)
 {
-	uint16_t msgId = 0;
-	debugf("subscription '%s' registered", topic.c_str());
-	int res = mqtt_subscribe(&broker, topic.c_str(), &msgId);
-	return res > 0;
+	if (enabled) {
+		uint16_t msgId = 0;
+		debugf("subscription '%s' registered", topic.c_str());
+		int res = mqtt_subscribe(&broker, topic.c_str(), &msgId);
+		return res > 0;
+	} else {
+		return false;
+	}
 }
 
 bool ninMqttClient::unsubscribe(const String& topic)
 {
-	uint16_t msgId = 0;
-	debugf("unsubscribing from '%s'", topic.c_str());
-	int res = mqtt_unsubscribe(&broker, topic.c_str(), &msgId);
-	return res > 0;
+	if (enabled) {
+		uint16_t msgId = 0;
+		debugf("unsubscribing from '%s'", topic.c_str());
+		int res = mqtt_unsubscribe(&broker, topic.c_str(), &msgId);
+		return res > 0;
+	} else {
+		return false;
+	}
 }
 
 void ninMqttClient::debugPrintResponseType(int type, int len)
@@ -313,6 +344,21 @@ void ninMqttClient::setPort(String port)
 {
 	this->port = port.toInt();
 	mqtt_init(&broker);
+}
+
+void ninMqttClient::setPort(uint16_t port)
+{
+	this->port = port;
+}
+
+void ninMqttClient::setEnabled(bool state)
+{
+	this->enabled = state;
+}
+
+bool ninMqttClient::isEnabled()
+{
+	return this->enabled;
 }
 
 

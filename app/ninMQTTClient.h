@@ -35,8 +35,8 @@ class URL;
 class ninMqttClient: protected TcpClient
 {
 public:
-	ninMqttClient(String serverHost, int serverPort, ninMqttStringSubscriptionCallback callback = NULL);
-	ninMqttClient(IPAddress serverIp, int serverPort, ninMqttStringSubscriptionCallback callback = NULL);
+	ninMqttClient(String serverHost, int serverPort, bool enabled, ninMqttStringSubscriptionCallback callback = NULL);
+	ninMqttClient(IPAddress serverIp, int serverPort, bool enabled, ninMqttStringSubscriptionCallback callback = NULL);
 	virtual ~ninMqttClient();
 
 	void setKeepAlive(int seconds);			//send to broker
@@ -60,7 +60,11 @@ public:
 
 	void setHost(String host);
 	void setPort(char* port);
+	void setPort(uint16_t port);
 	void setPort(String port);
+
+	void setEnabled(bool state);
+	bool isEnabled();
 
 #ifdef ENABLE_SSL
 	using TcpClient::addSslOptions;
@@ -88,6 +92,7 @@ private:
 	int posHeader;
 	ninMqttStringSubscriptionCallback callback;
 	int keepAlive = 60;
+	bool enabled = false;
 	int PingRepeatTime = 20;
 	unsigned long lastMessage = 0;
 	HashMap<uint16_t, ninMqttMessageDeliveredCallback> onDeliveryQueue;

@@ -1,103 +1,283 @@
 #include <user_config.h>
 #include <app_config.h>
-
 #include <SmingCore/SmingCore.h>
 #include <AppSettings.h>
 #include <Libraries/RCSwitch/RCSwitch.h>
 #include <RelaySwitch.h>
 #include <ninMQTTClient.h>
-/*
- *
- * if (mqtt.getConnectionState() != eTCS_Connected)
-				startMqttClient(); // Auto reconnect
- *
- */
 
+//#define printf_P_stack
+
+/* Web and FTP Server instance */
 HttpServer server;
 FTPServer ftp;
 
+/* Contains list of available wifi networks after populating */
 BssList networks;
+/* Current network and password for wifi connection, used in ajax callback */
 String network, password;
-Timer connectionTimer;
 
+/* Last modified string for webinterface */
 String lastModified;
 
+/* Forward declarations */
+void startMqttClient();
+void onMQTTMessageReceived(String topic, String message);
+void connectOk(IPAddress ip, IPAddress mask, IPAddress gateway);
+void connectFail(String ssid, uint8_t ssidLength, uint8_t *bssid, uint8_t reason);
+void onReceiveUDP(UdpConnection& connection, char *data, int size, IPAddress remoteIP, uint16_t remotePort);
+
+/* UDP Connection instance */
+UdpConnection udp = UdpConnection(onReceiveUDP);
+
+/* MQTT client instance */
+/* For quickly check you can use: http://www.hivemq.com/demos/websocket-client/ (Connection= test.mosquitto.org:8080) */
+ninMqttClient mqtt(DEFAULT_MQTT_SERVER, DEFAULT_MQTT_PORT, false, onMQTTMessageReceived);
+
+/* RelaySwitch and RCSwitch instance */
 RCSwitch rcSwitch = RCSwitch();
 RelaySwitch relay = RelaySwitch();
 
+/* Timer for make connection ajax callback */
+Timer connectionTimer;
+
+/* Timer for publishing sensor values */
 Timer sensorPublishTimer;
 
-// Forward declarations
-void startMqttClient();
-void onMessageReceived(String topic, String message);
-void connectOk(IPAddress ip, IPAddress mask, IPAddress gateway);
-void connectFail(String ssid, uint8_t ssidLength, uint8_t *bssid, uint8_t reason);
-
-// MQTT client
-// For quickly check you can use: http://www.hivemq.com/demos/websocket-client/ (Connection= test.mosquitto.org:8080)
-ninMqttClient mqtt(DEFAULT_MQTT_SERVER, DEFAULT_MQTT_PORT, onMessageReceived);
-
-// Callback for messages, arrived from MQTT server
-void onMessageReceived(String topic, String message)
+/* IRQ Callback for interrupt of key input
+void IRAM_ATTR keyIRQHandler()
 {
-	if (AppSettings.relay && AppSettings.relay_topic.equals(topic)) {
-		debugf("Relay Command received!");
-		if (message.equals("on") || message.equals("1")) { // Relay ON
-			relay.set(true);
-		} else if (message.equals("off") || message.equals("0")) { // Relay OFF
-			relay.set(false);
-		}
-	} else {
-		Serial.print(topic);
-		Serial.print(":\r\n\t"); // Prettify alignment for printing
-		Serial.println(message);
+	if (AppSettings.relay) {
+		relay.toggle();
+		if (mqtt.getConnectionState() != eTCS_Connected) //TODO
+			startMqttClient(); // Auto reconnect
+		mqtt.publish(AppSettings.relay_topic_pub, String(relay.get()), true);
 	}
 }
+*/
 
+/* Callback for UDP Receiving */
+void onReceiveUDP(UdpConnection& connection, char *data, int size, IPAddress remoteIP, uint16_t remotePort)
+{
+	debugf("UDP Sever callback from %s:%d, %d bytes", remoteIP.toString().c_str(), remotePort, size);
+
+	/* Debug for RCSwitch */
+	String d1,d2;
+	String d = String(data);
+	if ((d.charAt(0) == 'S' || d.charAt(0) == 'O' ) && d.length() == 12) {
+		for (uint8_t i = 1; i <= 5; i++) {
+			d1 += d.charAt(i);
+			d2 += d.charAt(i+5);
+		}
+		if (d.charAt(0) == 'S') {
+			rcSwitch.switchOn(d1.c_str(), d2.c_str());
+			debugf("ON D1 = %s | D2 = %s", d1.c_str(), d2.c_str());
+		} else if (d.charAt(0) == 'O') {
+			rcSwitch.switchOff(d1.c_str(), d2.c_str());
+			debugf("OFF D1 = %s | D2 = %s", d1.c_str(), d2.c_str());
+		}
+	} else if ((d.charAt(0) == 'P') && d.length() == 3) {
+		String protocol = String(d.charAt(1));
+		debugf("Set Protocol %s", protocol.c_str());
+		rcSwitch.setProtocol(protocol.toInt());
+	} else if ((d.charAt(0) == 'L')) {
+		String pulselength;
+		for (uint8_t i = 1; i < d.length(); i++) {
+			pulselength += d.charAt(i);
+		}
+		debugf("Set Pulselength %s", pulselength.c_str());
+		rcSwitch.setPulseLength(pulselength.toInt());
+	}
+	/* Debug RCSwitch End */
+
+	// Send echo to remote sender
+	String text = String("echo: ") + data;
+	udp.sendStringTo(remoteIP, remotePort, text);
+}
+
+/* Callback for messages, arrived from MQTT server */
+void onMQTTMessageReceived(String topic, String message)
+{
+	debugf("Debug: %s - %s", topic.c_str(), message.c_str());
+
+	/* If Relay is enabled and topic equals the topic from config then check payload */
+	if (AppSettings.relay && AppSettings.relay_topic_cmd.equals(topic)) {
+		debugf("Relay Command received!");
+		/* Check payload for valid message */
+		if (message.equals("on") || message.equals("1")) { // Relay ON
+			/* Set relay to on */
+			relay.set(true);
+			/* Check mqtt connection status */
+			if (mqtt.getConnectionState() != eTCS_Connected)
+				startMqttClient(); // Auto reconnect
+
+			/* Publish current relay state */
+			mqtt.publish(AppSettings.relay_topic_pub, "1", true);
+		} else if (message.equals("off") || message.equals("0")) { // Relay OFF
+			/* Set relay to off */
+			relay.set(false);
+			/* Check mqtt connection status */
+			if (mqtt.getConnectionState() != eTCS_Connected)
+				startMqttClient(); // Auto reconnect
+
+			/* Publish current relay state */
+			mqtt.publish(AppSettings.relay_topic_pub, "0", true);
+		}
+	}
+
+	/* RC Switch relay */
+	if (message.equals("on1")) {
+		rcSwitch.switchOn("11111", "00001");
+	}
+	else if (message.equals("on2")) {
+		rcSwitch.switchOn("11111", "00010");
+	}
+	else if (message.equals("on3")) {
+		rcSwitch.switchOn("11111", "00011");
+	}
+	else if (message.equals("on4")) {
+		rcSwitch.switchOn("11111", "00100");
+	}
+	else if (message.equals("on5")) {
+		rcSwitch.switchOn(2, 1);
+	}
+	else if (message.equals("off1")) {
+		rcSwitch.switchOff("11111", "00001");
+	}
+	else if (message.equals("off2")) {
+		rcSwitch.switchOff("11111", "00010");
+	}
+	else if (message.equals("off3")) {
+		rcSwitch.switchOff("11111", "00011");
+	}
+	else if (message.equals("off4")) {
+		rcSwitch.switchOff("11111", "00100");
+	}
+	else if (message.equals("off5")) {
+		rcSwitch.switchOff(2, 1);
+	}
+	/* RCSwitch relay end */
+}
+
+/* Timer callback function to publish values from attached sensors */
 void sensorPublish()
 {
 	debugf("sensorPublish()");
-	if (AppSettings.adc) { // if ADC is enabled in webinterface
+	/* If ADC is enabled */
+	if (AppSettings.adc) {
+		/* Read out ADC value */
 		int a = system_adc_read();
-		if (AppSettings.adc_pub) { // Publish to MQTT if enabled in webinterface
+		/* If publishing of ADC Values is enabled, then publish */
+		if (AppSettings.adc_pub) {
+			/* Check mqtt connection status */
 			if (mqtt.getConnectionState() != eTCS_Connected)
-							startMqttClient(); // Auto reconnect
+				startMqttClient(); // Auto reconnect
 
+			/* Publish mqtt adc value */
 			mqtt.publish(AppSettings.adc_topic, String(a), true);
 		}
 	}
 }
 
-// Run MQTT client
+/* Start MQTT client and publish/subscribe to the used services */
 void startMqttClient()
 {
-	if(!mqtt.setWill(AppSettings.mqtt_topic_lwt, "offline", 1, true)) {
-		debugf("Unable to set the last will and testament. Most probably there is not enough memory on the device.");
+	if (mqtt.isEnabled()) {
+
+		/* Set LWT message and topic */
+		if(!mqtt.setWill(AppSettings.mqtt_topic_lwt, "offline", 1, true)) {
+			debugf("Unable to set the last will and testament. Most probably there is not enough memory on the device.");
+		}
+
+		/* Populate MQTT Settings from configuration */
+		mqtt.setHost(AppSettings.mqtt_server);
+		mqtt.setPort(AppSettings.mqtt_port);
+		mqtt.connect(AppSettings.mqtt_userid, AppSettings.mqtt_login, AppSettings.mqtt_password);
+
+		/* Subscribe to client command topic for general commands */
+		mqtt.subscribe(AppSettings.mqtt_topic_cmd);
+
+		/* Publish LWT message */
+		mqtt.publishWithQoS(AppSettings.mqtt_topic_lwt, "online", 1, true);
+
+		/* If relay is attached and enabled in settings */
+		if (AppSettings.relay) {
+			/* Publish current relay state to mqtt */
+			mqtt.publish(AppSettings.relay_topic_pub, String(relay.get()), true);
+			//TODO: Add relay config key, key_pin, relay_pin, ...
+			/* Attach interrupt if enabled in config */
+			//attachInterrupt(KEY_INPUT_PIN, keyIRQHandler, CHANGE);
+			/* Check if set topics are at least 1 byte long */
+			if ((AppSettings.relay_topic_cmd.length() >= 1) && (AppSettings.relay_topic_pub.length() >= 1)) {
+				/* Check if topic backup is set */
+				if (AppSettings.relay_topic_cmd_old.length() > 0)
+					mqtt.unsubscribe(AppSettings.relay_topic_cmd_old); /* Unsubscribe backup relay topic, for changes in webinterface */
+				mqtt.subscribe(AppSettings.relay_topic_cmd); /* Resubscribe relay topic */
+				/* Set backup relay topic to current relay topic */
+				AppSettings.relay_topic_cmd_old = AppSettings.relay_topic_cmd;
+			} else {
+				// TODO: show error for to short relay topics with ajax
+			}
+		} else {
+			/* detach Interrupt pin if enabled in config */
+			//detachInterrupt(KEY_INPUT_PIN);
+			/* Relay is not enabled in config, check if there is a topic set and unsubscribe if so */
+			if (AppSettings.relay_topic_cmd.length() >= 1) {
+				mqtt.unsubscribe(AppSettings.relay_topic_cmd_old);
+			}
+		}
+
+		if (AppSettings.rcswitch) {
+			mqtt.subscribe(AppSettings.rcswitch_topic);
+			rcSwitch.enableTransmit(AppSettings.rcswitch_pin);
+		} else {
+			mqtt.unsubscribe(AppSettings.rcswitch_topic);
+			rcSwitch.disableTransmit();
+		}
 	}
-	mqtt.setHost(AppSettings.mqtt_server);
-	mqtt.setPort(AppSettings.mqtt_port);
-	mqtt.connect(AppSettings.mqtt_userid, AppSettings.mqtt_login, AppSettings.mqtt_password);
-	mqtt.subscribe(AppSettings.mqtt_topic_cmd);
-	//mqtt.publish(AppSettings.mqtt_topic_pub, "online");
-	mqtt.publishWithQoS(AppSettings.mqtt_topic_lwt, "online", 1, true);
 }
 
+/* Start used services for connected peripherals */
+void startServices()
+{
+	//TODO: Add UDP config blah
+	//if udp blah
+	/* Close any udp connections */
+	udp.close();
+	/* Start UDP Server */
+	udp.listen(AppSettings.udp_port);
+
+	/* Check if MQTT Connection is still alive */
+	if (mqtt.getConnectionState() != eTCS_Connected)
+			startMqttClient(); /* Auto reconnect */
+
+	//attachInterrupt(16, sensorIRQHandler, CHANGE);
+}
+
+/* Index target for webserver */
 void onIndex(HttpRequest &request, HttpResponse &response)
 {
 	TemplateFileStream *tmpl = new TemplateFileStream("index.html");
 	auto &vars = tmpl->variables();
+	vars["lastedit"] = lastModified;
 	response.sendTemplate(tmpl); // will be automatically deleted
 }
 
+/* On Reboot target for webserver */
 void onReboot(HttpRequest &request, HttpResponse &response)
 {
+	//TODO: Restart trigger wont work */
 	debugf("Restarting...");
+	/* Disable Watchdog */
 	WDT.enable(true);
+	/* Restart System */
 	System.restart();
 }
 
-void onIpConfig(HttpRequest &request, HttpResponse &response)
+/* Network config target for webserver */
+void onConfig(HttpRequest &request, HttpResponse &response)
 {
+	/* If values are passed from browser we will set here */
 	if (request.method == HTTP_POST)
 	{
 		AppSettings.dhcp = request.getPostParameter("dhcp") == "1";
@@ -128,113 +308,109 @@ void onIpConfig(HttpRequest &request, HttpResponse &response)
 		vars["gateway"] = "192.168.1.1";
 	}
 
+	vars["lastedit"] = lastModified;
+
 	response.sendTemplate(tmpl); // will be automatically deleted
 }
 
+/* Peripheral config target for webserver */
 void onPeriphConfig(HttpRequest &request, HttpResponse &response)
 {
+	/* If values are passed from browser we will set here */
 	if (request.method == HTTP_POST)
 	{
-		AppSettings.timer_delay = atoi(request.getPostParameter("timer_delay").c_str());
+		AppSettings.timer_delay = String(request.getPostParameter("timer_delay")).toInt();
 
+		/* Relay Settings */
 		AppSettings.relay = request.getPostParameter("relay").equals("on") ? true : false;
-		AppSettings.adc = request.getPostParameter("sensor_adc").equals("on") ? true : false;
-		AppSettings.temp_dht11 = request.getPostParameter("temp_dht11").equals("on") ? true : false;
-		AppSettings.temp_ds18b20 = request.getPostParameter("temp_ds18b20").equals("on") ? true : false;
-		AppSettings.temp_lm75 = request.getPostParameter("temp_lm75").equals("on") ? true : false;
+		AppSettings.relay_pin = String(request.getPostParameter("relay_pin")).toInt();
+		AppSettings.relay_topic_pub = request.getPostParameter("topic_relay_pub");
+		AppSettings.relay_topic_cmd = request.getPostParameter("topic_relay_cmd");
+		AppSettings.keyinput = request.getPostParameter("keyinput_on").equals("on") ? true : false;
+		AppSettings.keyinput_invert = request.getPostParameter("keyinput_invert").equals("on") ? true : false;
+		AppSettings.keyinput_pin = String(request.getPostParameter("keyinput_pin")).toInt();
 
+		/* ADC Settings */
+		AppSettings.adc = request.getPostParameter("adc").equals("on") ? true : false;
 		AppSettings.adc_pub = request.getPostParameter("sensor_adc_pub").equals("1") ? true : false;
-		AppSettings.temp_dht11_pub = request.getPostParameter("temp_dht11_pub").equals("1") ? true : false;
-		AppSettings.temp_ds18b20_pub = request.getPostParameter("temp_ds18b20_pub").equals("1") ? true : false;
-		AppSettings.temp_lm75_pub = request.getPostParameter("temp_lm75_pub").equals("1") ? true : false;
-
-		AppSettings.relay_topic = request.getPostParameter("topic_relay_pub");
 		AppSettings.adc_topic = request.getPostParameter("topic_adc_pub");
-		AppSettings.temp_dht11_temp_topic = request.getPostParameter("topic_dht11temp_pub");
-		AppSettings.temp_dht11_humi_topic = request.getPostParameter("topic_dht11humi_pub");
-		AppSettings.temp_ds18b20_topic = request.getPostParameter("topic_ds18b20_pub");
-		AppSettings.temp_lm75_topic = request.getPostParameter("topic_lm75_pub");
+
+		/* RCSwitch Settings */
+		AppSettings.rcswitch = request.getPostParameter("rcswitch").equals("on") ? true : false;
+		AppSettings.rcswitch_topic = request.getPostParameter("topic_rcswitch");
+		AppSettings.rcswitch_pin = String(request.getPostParameter("rcswitch_pin")).toInt();
+		//TODO RCSWitch Save devices aswell
 
 		debugf("Updating Peripheral settings");
+
+		/* Save peripheral config */
 		AppSettings.savePeriph();
 
-		if (AppSettings.relay) {
-			if (AppSettings.relay_topic.length() >= 1) {
-				relay.init(14, false);
-				if (mqtt.getConnectionState() != eTCS_Connected)
-						startMqttClient(); // Auto reconnect
+		/* Start services again */
+		startServices();
 
-				mqtt.unsubscribe(AppSettings.relay_topic_old);
-				mqtt.subscribe(AppSettings.relay_topic);
-				AppSettings.relay_topic_old = AppSettings.relay_topic;
-			} else {
-				// TODO: show error with ajax
-			}
-		} else {
-			if (AppSettings.relay_topic.length() >= 1) {
-				mqtt.unsubscribe(AppSettings.relay_topic_old);
-			}
-		}
-
+		/* Set interval of sensor Publishing, even if its not changed, doesnt matter */
 		sensorPublishTimer.setIntervalMs(AppSettings.timer_delay);
 	} else {
-		AppSettings.loadPeriph();
+		//AppSettings.loadPeriph();
 	}
+	AppSettings.loadPeriph();
 
 	TemplateFileStream *tmpl = new TemplateFileStream("periph.html");
 	auto &vars = tmpl->variables();
 
 	vars["timer_delay"] = String(AppSettings.timer_delay);
 
+	/* Relay Settings */
 	vars["relay_on"] = AppSettings.relay ? "checked='checked'" : "";
-	vars["sensor_adc_on"] = AppSettings.adc ? "checked='checked'" : "";
-	vars["temp_dht11_on"] = AppSettings.temp_dht11 ? "checked='checked'" : "";
-	vars["temp_ds18b20_on"] = AppSettings.temp_ds18b20 ? "checked='checked'" : "";
-	vars["temp_lm75_on"] = AppSettings.temp_lm75 ? "checked='checked'" : "";
+	vars["relay_pin"] = AppSettings.relay_pin;
+	vars["topic_relay_cmd"] = AppSettings.relay_topic_cmd;
+	vars["topic_relay_pub"] = AppSettings.relay_topic_pub;
+	vars["keyinput_on"] = AppSettings.keyinput ? "checked='checked'" : "";
+	vars["keyinput_pin"] = AppSettings.keyinput_pin;
+	vars["keyinput_invert"] = AppSettings.keyinput_invert ? "checked='checked'" : "";
 
+	vars["adc_on"] = AppSettings.adc ? "checked='checked'" : "";
+	vars["topic_adc"] = AppSettings.adc_topic;
 	vars["adc_pub_on"] = AppSettings.adc_pub ? "checked='checked'" : "";
 	vars["adc_pub_off"] = !AppSettings.adc_pub ? "checked='checked'" : "";
 
-	vars["dht11_pub_on"] = AppSettings.temp_dht11_pub ? "checked='checked'" : "";
-	vars["dht11_pub_off"] = !AppSettings.temp_dht11_pub ? "checked='checked'" : "";
+	vars["rcswitch_on"] = AppSettings.rcswitch ? "checked='checked'" : "";
+	vars["topic_rcswitch"] = AppSettings.rcswitch_topic;
+	vars["rcswitch_pin"] = AppSettings.rcswitch_pin;
 
-	vars["ds18_pub_on"] = AppSettings.temp_ds18b20_pub ? "checked='checked'" : "";
-	vars["ds18_pub_off"] = !AppSettings.temp_ds18b20_pub ? "checked='checked'" : "";
-
-	vars["lm75_pub_on"] = AppSettings.temp_lm75_pub ? "checked='checked'" : "";
-	vars["lm75_pub_off"] = !AppSettings.temp_lm75_pub ? "checked='checked'" : "";
-
-	vars["topic_relay"] = AppSettings.relay_topic;
-	vars["topic_adc"] = AppSettings.adc_topic;
-	vars["topic_dht11t"] = AppSettings.temp_dht11_temp_topic;
-	vars["topic_dht11h"] = AppSettings.temp_dht11_humi_topic;
-	vars["topic_ds18b20"] = AppSettings.temp_ds18b20_topic;
-	vars["topic_lm75"] = AppSettings.temp_lm75_topic;
+	vars["lastedit"] = lastModified;
 
 	response.sendTemplate(tmpl); // will be automatically deleted
 }
 
+/* MQTT Config target for Webserver */
 void onMQTTConfig(HttpRequest &request, HttpResponse &response)
 {
+	//TODO: Message in webinterface, mqtt will enabled after first save
+	/* If values are passed from browser we will set here */
 	if (request.method == HTTP_POST)
 	{
+		mqtt.setEnabled(true);
 		AppSettings.mqtt_server = request.getPostParameter("server");
-		AppSettings.mqtt_port = request.getPostParameter("port");
+		AppSettings.mqtt_port = request.getPostParameter("port").toInt();
 		AppSettings.mqtt_userid = request.getPostParameter("userid");
 		AppSettings.mqtt_login = request.getPostParameter("login");
 		AppSettings.mqtt_password = request.getPostParameter("password");
 		AppSettings.mqtt_topic_lwt = request.getPostParameter("topic_lwt");
 		AppSettings.mqtt_topic_cmd = request.getPostParameter("topic_cmd");
 		AppSettings.mqtt_topic_pub = request.getPostParameter("topic_pub");
+		AppSettings.mqtt_enabled = mqtt.isEnabled();
 		debugf("Updating MQTT settings: %d", AppSettings.mqtt_server.length());
 		AppSettings.saveMQTT();
+
 	}
 
 	TemplateFileStream *tmpl = new TemplateFileStream("mqtt.html");
 	auto &vars = tmpl->variables();
 
 	if (AppSettings.mqtt_server.length() <= 0) { vars["server"] = DEFAULT_MQTT_SERVER; } else { vars["server"] = AppSettings.mqtt_server; }
-	if (AppSettings.mqtt_port.length() <= 0) { vars["port"] = DEFAULT_MQTT_PORT; } else { vars["port"] = AppSettings.mqtt_port; }
+	if (AppSettings.mqtt_port > 1024) { vars["port"] = DEFAULT_MQTT_PORT; } else { vars["port"] = AppSettings.mqtt_port; }
 	if (AppSettings.mqtt_login.length() <= 0) { vars["login"] = DEFAULT_MQTT_LOGIN; } else { vars["login"] = AppSettings.mqtt_login; }
 	if (AppSettings.mqtt_userid.length() <= 0) { vars["userid"] = DEFAULT_MQTT_USERID; } else { vars["userid"] = AppSettings.mqtt_userid; }
 	if (AppSettings.mqtt_password.length() <= 0) { vars["password"] = DEFAULT_MQTT_PASS; } else { vars["password"] = AppSettings.mqtt_password; }
@@ -242,9 +418,12 @@ void onMQTTConfig(HttpRequest &request, HttpResponse &response)
 	if (AppSettings.mqtt_topic_cmd.length() <= 0) { vars["topic_cmd"] = DEFAULT_MQTT_CMD; } else { vars["topic_cmd"] = AppSettings.mqtt_topic_cmd; }
 	if (AppSettings.mqtt_topic_pub.length() <= 0) { vars["topic_pub"] = DEFAULT_MQTT_PUB; } else { vars["topic_pub"] = AppSettings.mqtt_topic_pub; }
 
+	vars["lastedit"] = lastModified;
+
 	response.sendTemplate(tmpl); // will be automatically deleted
 }
 
+/* Default target for Webserver */
 void onFile(HttpRequest &request, HttpResponse &response)
 {
 	if (lastModified.length() >0 && request.getHeader("If-Modified-Since").equals(lastModified)) {
@@ -269,29 +448,67 @@ void onFile(HttpRequest &request, HttpResponse &response)
 	}
 }
 
+/* Debugging configuration values, dumps out the whole JSON config file which is currently active */
+/* Syntax: /dumpcfg?type=<type>   where type is the type of the config file (network, mqtt, periph) */
 void onDumpConfig(HttpRequest &request, HttpResponse &response)
 {
-	int size = fileGetSize(APP_PERIPH_SETTINGS_FILE);
-	char* cfgString = new char[size + 1];
-	fileGetContent(APP_PERIPH_SETTINGS_FILE, cfgString, size + 1);
+	if (request.method == HTTP_GET) {
+		String type = request.getQueryParameter("type");
+		if (type.equals("network")) {
+			int size = fileGetSize(APP_GLOBAL_SETTINGS_FILE);
+			char* cfgString = new char[size + 1];
+			fileGetContent(APP_GLOBAL_SETTINGS_FILE, cfgString, size + 1);
 
-	response.sendString(cfgString);
+			response.sendString(cfgString);
+		} else if (type.equals("mqtt")) {
+			int size = fileGetSize(APP_MQTT_SETTINGS_FILE);
+			char* cfgString = new char[size + 1];
+			fileGetContent(APP_MQTT_SETTINGS_FILE, cfgString, size + 1);
 
-	delete[] cfgString;
+			response.sendString(cfgString);
+			delete[] cfgString;
+		} else if (type.equals("periph")) {
+			int size = fileGetSize(APP_PERIPH_SETTINGS_FILE);
+			char* cfgString = new char[size + 1];
+			fileGetContent(APP_PERIPH_SETTINGS_FILE, cfgString, size + 1);
+
+			response.sendString(cfgString);
+			delete[] cfgString;
+		}
+	} else {
+		int size1 = fileGetSize(APP_GLOBAL_SETTINGS_FILE);
+		int size2 = fileGetSize(APP_MQTT_SETTINGS_FILE);
+		int size3 = fileGetSize(APP_PERIPH_SETTINGS_FILE);
+		char* cfgString1 = new char[size1 + 1];
+		char* cfgString2 = new char[size2 + 1];
+		char* cfgString3 = new char[size3 + 1];
+		String delimiter("\r\n\r\n-\r\n\r\n");
+		fileGetContent(APP_GLOBAL_SETTINGS_FILE, cfgString1, size1 + 1);
+		fileGetContent(APP_MQTT_SETTINGS_FILE, cfgString2, size2 + 1);
+		fileGetContent(APP_PERIPH_SETTINGS_FILE, cfgString3, size3 + 1);
+		String temp = String(cfgString1) + delimiter + String(cfgString2) + delimiter + String(cfgString3);
+		response.sendString(temp);
+		delete[] cfgString1;
+		delete[] cfgString2;
+		delete[] cfgString3;
+	}
 }
 
+/* Ajax target on Network List receive */
 void onAjaxNetworkList(HttpRequest &request, HttpResponse &response)
 {
+	/* Create JSON stream */
 	JsonObjectStream* stream = new JsonObjectStream();
 	JsonObject& json = stream->getRoot();
 
 	json["status"] = (bool)true;
 
+	/* Get connection state of wifi station */
 	bool connected = WifiStation.isConnected();
 	json["connected"] = connected;
 	if (connected)
 	{
-		// Copy full string to JSON buffer memory
+		/* Copy full string to JSON buffer memory */
 		json["network"]= WifiStation.getSSID();
 	}
 
@@ -301,39 +518,51 @@ void onAjaxNetworkList(HttpRequest &request, HttpResponse &response)
 		if (networks[i].hidden) continue;
 		JsonObject &item = netlist.createNestedObject();
 		item["id"] = (int)networks[i].getHashId();
-		// Copy full string to JSON buffer memory
+		/* Copy full string to JSON buffer memory */
 		item["title"] = networks[i].ssid;
 		item["signal"] = networks[i].rssi;
 		item["encryption"] = networks[i].getAuthorizationMethodName();
 	}
 
 	response.setAllowCrossDomainOrigin("*");
+
+	/* Send back JSON created network list to our ajax script */
 	response.sendDataStream(stream, MIME_JSON);
 }
 
+/* Start connection triggered from ajax service */
 void makeConnection()
 {
+	/* Enable wifistation if not already enabled */
 	WifiStation.enable(true);
+
+	/* Set config for wifistation from values */
 	WifiStation.config(network, password, true, false);
-	// Run our method when station was connected to AP (or not connected)
-	// Set callback that should be triggered when we have assigned IP
+	/* Run our method when station was connected to AP (or not connected) */
+	/* Set callback that should be triggered when we have assigned IP */
 	WifiEvents.onStationGotIP(connectOk);
 
-	// Set callback that should be triggered if we are disconnected or connection attempt failed
+	/* Set callback that should be triggered if we are disconnected or connection attempt failed */
 	WifiEvents.onStationDisconnect(connectFail);
 
+	/* Trigger wifistation connection manual */
 	WifiStation.connect();
 
+	/* Write values from connection to appsettings and save to config file */
 	AppSettings.ssid = network;
 	AppSettings.password = password;
+	/* Save all config files from values of AppSettings */
 	AppSettings.saveGlobal();
-
 	debugf("Making Connection");
+
+	/* Small delay to let him connect */
 	delay(3000);
 
-	network = ""; // task completed
+	/* Set network value back to "" for task completion indication */
+	network = "";
 }
 
+/* Ajax target to connect to wifi network */
 void onAjaxConnect(HttpRequest &request, HttpResponse &response)
 {
 	JsonObjectStream* stream = new JsonObjectStream();
@@ -358,7 +587,7 @@ void onAjaxConnect(HttpRequest &request, HttpResponse &response)
 		{
 			network = curNet;
 			password = curPass;
-			debugf("CONNECT TO: %s %s", network.c_str(), password.c_str());
+-			debugf("CONNECT TO: %s %s", network.c_str(), password.c_str());
 			json["connected"] = false;
 			connectionTimer.initializeMs(1200, makeConnection).startOnce();
 		}
@@ -376,224 +605,247 @@ void onAjaxConnect(HttpRequest &request, HttpResponse &response)
 	response.sendDataStream(stream, MIME_JSON);
 }
 
+/* Starts the implemented Webserver and add the used targets */
 void startWebServer()
 {
+	/* Listen on Port */
+	//TODO: Webserver port in configuration file?
 	server.listen(80);
+
+	/* Add targets to server */
 	server.addPath("/", onIndex);
 	server.addPath("/reboot", onReboot);
-	server.addPath("/ipconfig", onIpConfig);
+	server.addPath("/config", onConfig);
 	server.addPath("/periph", onPeriphConfig);
 	server.addPath("/dumpcfg", onDumpConfig);
 	server.addPath("/mqttconfig", onMQTTConfig);
 	server.addPath("/ajax/get-networks", onAjaxNetworkList);
 	server.addPath("/ajax/connect", onAjaxConnect);
+
+	/* Any other targets */
 	server.setDefaultHandler(onFile);
 }
 
+/* Starts the FTP Server with fixed credentials, just for debugging purposes, had to be disabled in production state */
 void startFTP()
 {
+	/* Check for existing index.html, else create a empty one with error message */
 	if (!fileExist("index.html"))
 		fileSetContent("index.html", "<h3>No SPIFFS found! Contact supplier!</h3>");
 
-	// Start FTP server
+	/* Start FTP server instance */
 	ftp.listen(DEFAULT_FTP_PORT);
+
+	/* Add fixed credention ftp user account */
 	ftp.addUser(DEFAULT_FTP_USER, DEFAULT_FTP_PASS); // FTP account
 }
 
-// Will be called when system initialization was completed
+/* Start mDNS Server using ESP8266 SDK functions */
+/*
+void startmDNS(IPAddress ip)
+{
+    struct mdns_info *info = (struct mdns_info *)os_zalloc(sizeof(struct mdns_info));
+    info->host_name = (char *) DEFAULT_MDNS_HOSTNAME; // You can replace test with your own host name
+    info->ipAddr = ip;
+    info->server_name = (char *) DEFAULT_MDNS_SERVERNAME;
+    info->server_port = DEFAULT_MDNS_SERVERPORT;
+    info->txt_data[0] = (char *) "version = now";
+    espconn_mdns_init(info);
+}
+
+// Stop mDNS Server
+void stopmDNS()
+{
+	espconn_mdns_close();
+}
+*/
+
+/* Will be called when system initialization was completed */
 void startServers()
 {
 	startFTP();
 	startWebServer();
 }
 
+/* Sets Wifi Accesspoint Settings and start it */
 void startAP()
 {
-	digitalWrite(LED_SETUP_PIN, 1); // Put off Setup LED Indicator
-	// Start AP for configuration
+	/* Put on Setup LED Indicator to indicate running ap */
+	digitalWrite(LED_SETUP_PIN, 1);
+
+	/* Start AP for configuration */
 	WifiAccessPoint.enable(true);
 	WifiAccessPoint.config(NINHOME_AP_NAME, "", AUTH_OPEN);
+
+	//TODO: activate mDNS on startAP()
+	/* Start mDNS server on Wifi Accesspoint IP */
+	//startmDNS(WifiAccessPoint.getIP());
 }
 
+/* Stop Wifi Accesspoint if running */
 void stopAP()
 {
-	WifiAccessPoint.enable(false);
-	digitalWrite(LED_SETUP_PIN, 0); // Put off Setup LED Indicator
+	/* If Wifi Accesspoint is enabled then disable it */
+	if (WifiAccessPoint.isEnabled())
+		WifiAccessPoint.enable(false);
+
+	/* Put off Setup LED Indicator */
+	digitalWrite(LED_SETUP_PIN, 0);
+
+	//TODO: disable mDNS server on stopAP()
+	/* Stop mDNS server */
+	//stopmDNS();
 }
 
+/* Callback when wifi network scan is finished */
 void networkScanCompleted(bool succeeded, BssList list)
 {
+	/* if the network scan was successful */
 	if (succeeded)
 	{
+		/* populate the networks list with the found networks */
 		for (int i = 0; i < list.count(); i++)
 			if (!list[i].hidden && list[i].ssid.length() > 0) {
 				networks.add(list[i]);
 				debugf("Network %d = %s", i, list[i].ssid.c_str());
 			}
 	}
+	/* sort the found networks */
 	networks.sort([](const BssInfo& a, const BssInfo& b){ return b.rssi - a.rssi; } );
 }
 
-// Will be called when WiFi station was connected to AP
+/* Callback when WiFi station was connected to AP and got IP */
 void connectOk(IPAddress ip, IPAddress mask, IPAddress gateway)
 {
+	/* Debug output of IP */
 	debugf("I'm CONNECTED");
 	Serial.println(ip.toString());
 
-	// Run MQTT client
-	debugf("Starting MQTT Client");
-	startMqttClient();
+	AppSettings.loadMQTT();
+	mqtt.setEnabled(AppSettings.mqtt_enabled);
 
-	// Start Timer
+	/* Start MQTT client and publish/subscribe used extensions */
+	if (mqtt.isEnabled()) {
+		debugf("Starting MQTT Client");
+		startMqttClient();
+	} else {
+		debugf("MQTT still disabled, update settings!");
+	}
+
+	//TODO: Is another load of peripheral settings necessary?
+	/* Load peripheral settings */
+	AppSettings.loadPeriph();
+
+	/* Start Services for Peripherals */
+	startServices();
+
+	/* Start Timer for publishing attached sensor values, interval from settings */
 	sensorPublishTimer.initializeMs(AppSettings.timer_delay, sensorPublish).start();
-
 	//stopAP(); TODO: When to stop AP? Or manually triggered in webinterface?
 }
 
-// Will be called when WiFi station timeout was reached
+/* Callback when WiFi station timeout was reached */
 void connectFail(String ssid, uint8_t ssidLength, uint8_t *bssid, uint8_t reason)
 {
-	// The different reason codes can be found in user_interface.h. in your SDK.
+	/* The different reason codes can be found in user_interface.h. in your SDK. */
 	debugf("Disconnected from %s. Reason: %d", ssid.c_str(), reason);
+	/* If wifi disconnect reason was authentication failed then assume wrong password and start wifi accesspoint again */
 	if (reason >= 200) {//|| reason == 2) {
+		/* Disconnect wifistation, dont know if necessary */
 		WifiStation.disconnect();
 		debugf("Falling Back to Setup Mode");
+		/* Start Wifi Accesspoint */
 		startAP();
 	}
-	/*
-		REASON_UNSPECIFIED              = 1,
-	REASON_AUTH_EXPIRE              = 2,
-	REASON_AUTH_LEAVE               = 3,
-	REASON_ASSOC_EXPIRE             = 4,
-	REASON_ASSOC_TOOMANY            = 5,
-	REASON_NOT_AUTHED               = 6,
-	REASON_NOT_ASSOCED              = 7,
-	REASON_ASSOC_LEAVE              = 8,
-	REASON_ASSOC_NOT_AUTHED         = 9,
-	REASON_DISASSOC_PWRCAP_BAD      = 10,  // 11h
-	REASON_DISASSOC_SUPCHAN_BAD     = 11,  // 11h
-	REASON_IE_INVALID               = 13,  // 11i
-	REASON_MIC_FAILURE              = 14,  // 11i
-	REASON_4WAY_HANDSHAKE_TIMEOUT   = 15,  // 11i
-	REASON_GROUP_KEY_UPDATE_TIMEOUT = 16,  // 11i
-	REASON_IE_IN_4WAY_DIFFERS       = 17,  // 11i
-	REASON_GROUP_CIPHER_INVALID     = 18,  // 11i
-	REASON_PAIRWISE_CIPHER_INVALID  = 19,  // 11i
-	REASON_AKMP_INVALID             = 20,  // 11i
-	REASON_UNSUPP_RSN_IE_VERSION    = 21,  // 11i
-	REASON_INVALID_RSN_IE_CAP       = 22,  // 11i
-	REASON_802_1X_AUTH_FAILED       = 23,  // 11i
-	REASON_CIPHER_SUITE_REJECTED    = 24,  // 11i
-
-	REASON_BEACON_TIMEOUT           = 200,
-	REASON_NO_AP_FOUND              = 201,
-	REASON_AUTH_FAIL				= 202,
-	REASON_ASSOC_FAIL				= 203,
-	REASON_HANDSHAKE_TIMEOUT		= 204,
-	*/
 }
 
-void init()
+/* Init General GPIO settings */
+void initIO()
 {
-	spiffs_mount(); // Mount file system, in order to work with files
-
 	pinMode(LED_SETUP_PIN, OUTPUT);
-	pinMode(A0, INPUT);
-	pinMode(RESET_PIN, INPUT_PULLUP);
+	//pinMode(KEY_INPUT_PIN, INPUT_PULLUP);
+	//pinMode(A0, INPUT);
+}
 
-	pinMode(14, OUTPUT); // Relay
+/* Initializes the ninHome Node and start attached peripherals */
+void initNode()
+{
+	/* Init General IO Ports */
+	initIO();
 
-	/*rcSwitch.enableTransmit(RCSWITCH_TX_PIN);
-
-	while(1) {
-		rcSwitch.switchOn("11111", "00010");
-		delay(200);
-		rcSwitch.switchOff("11111", "00010");
-		delay(200);
-
-		rcSwitch.switchOff("11111", "00011");
-		delay(200);
-		rcSwitch.switchOn("11111", "00011");
-		delay(200);
-	}*/
-
+	/* Blink Setup LED 3 Times to indicate starting */
 	for (uint8_t i = 1; i <= 6; i++) {
 		digitalWrite(LED_SETUP_PIN, !digitalRead(LED_SETUP_PIN));
 		delay(200);
 	}
 
+	/* Load Last Modified Timestamp from the Webcontent */
 	if(fileExist(".lastModified")) {
 		// The last modification
 		lastModified = fileGetContent(".lastModified");
 		lastModified.trim();
 	}
 
-	Serial.begin(115200); // 115200 by default
-	Serial.systemDebugOutput(true); // Enable debug output to serial
-
-	AppSettings.loadAll();
-
-	/*
-	AppSettings.rcswitch = true;
-	AppSettings.rcswitch_topic = "Testtopic";
-	Vector<String>temp;
-	temp.addElement("11111");
-	temp.addElement("00010");
-
-	AppSettings.rcswitch_dev.add(temp);
-	AppSettings.rcswitch_dev.add(temp);
-	AppSettings.rcswitch_count = AppSettings.rcswitch_dev.size();
-	AppSettings.rcswitch_dev[0][0] = "11111";
-	AppSettings.rcswitch_dev[0][1] = "00010";
-	AppSettings.rcswitch_dev[1][0] = "11111";
-	AppSettings.rcswitch_dev[1][1] = "00001";
-	AppSettings.savePeriph();
-    */
-
+	/* Enable Wifi Client, even if none is set. Just to scan out existing networks */
 	WifiStation.enable(true, false);
+	/* Enable Wifi Scanning and process in "networkScanCompleted" callback function */
 	WifiStation.startScan(networkScanCompleted);
 
-	if (AppSettings.existGlobal() && (digitalRead(RESET_PIN) == 1))
+	/* Check if there is already an existing configuration for wifi network */
+	if (AppSettings.existGlobal())
 	{
+		/* Load other configuration files */
+		AppSettings.loadAll();
+
+		/* If there is any ssid set then assume there is a network set */
 		if (AppSettings.ssid.length() > 0) {
 			debugf("Settings found. Starting Station Mode");
+			/* Stopping Accesspoint mode if it is running */
+			stopAP();
 
-			digitalWrite(LED_SETUP_PIN, 0); // Put off Setup LED Indicator
-
+			//TODO: nosave option wont work correctly
+			/* Set the config values to the corrosponding wifistation settings and disable saving */
 			WifiStation.config(AppSettings.ssid, AppSettings.password, true, false);
+
+			/* If dhcp is disabled in settings then enable set fixed ip from settings */
 			if (!AppSettings.dhcp && !AppSettings.ip.isNull())
 				WifiStation.setIP(AppSettings.ip, AppSettings.netmask, AppSettings.gateway);
 
-			// Run our method when station was connected to AP (or not connected)
-			// Set callback that should be triggered when we have assigned IP
+			/* register callbacks for GotIP and Disconnect wifi events */
 			WifiEvents.onStationGotIP(connectOk);
-
-			// Set callback that should be triggered if we are disconnected or connection attempt failed
+			/* set callback that should be triggered if we are disconnected or connection attempt failed */
 			WifiEvents.onStationDisconnect(connectFail);
 		} else {
+			/* No valid settings found, so start access point mode */
 			debugf("Settings found but SSID is empty! Starting Setup Mode");
 			startAP();
 		}
-	} else if (AppSettings.existGlobal() && (digitalRead(RESET_PIN) == 0)) {
-		debugf("Settings found but reset condition triggered!");
-		debugf("Erasing App Settings...");
-		if(fileExist(APP_GLOBAL_SETTINGS_FILE)) {
-			fileDelete(APP_GLOBAL_SETTINGS_FILE);
-			//TODO: Delete appropriate flash 128 bytes where wifi credentials are stored (0x7E000)
-			//		ex. ./esptool.py read_flash 0x7E000 128 wifisettings.bin
-		}
-		if(fileExist(APP_MQTT_SETTINGS_FILE))
-			fileDelete(APP_MQTT_SETTINGS_FILE);
-
-		if(fileExist(APP_PERIPH_SETTINGS_FILE))
-			fileDelete(APP_PERIPH_SETTINGS_FILE);
-
-		debugf("done");
 	} else {
+		/* No settings file found, so start access point mode */
 		debugf("No Settings found. Starting Setup Mode");
 		startAP();
 	}
 
-	// Run WEB server on system ready
+	/* If a relay attached and enabled in settings we init it here */
+	if (AppSettings.relay)
+		relay.init(AppSettings.relay_pin, false);
+
+	/* Register onReady callback to run services on system ready */
 	System.onReady(startServers);
+}
+
+void init()
+{
+	/* Mount file system, in order to work with files */
+	spiffs_mount();
+
+	/* Start Serial Debug Terminal */
+	Serial.begin(115200); // 115200 by default
+
+	//TODO: if debug disabled it get into bootloop, inspect stacktrace
+	/* Enable debug output to serial */
+	Serial.systemDebugOutput(true);
+
+	/* Start initialization of ninHOME node */
+	initNode();
 }

@@ -1,9 +1,8 @@
 + Reset after change/set Network (automatically or triggered from webinterface)
-+ Setup AJAX not working correctly, fixing
 + More Settings in AJAX Web, structure!?
 + Error checking in ajax web
-+ Display of current settings and states
-+ Implement UDP Server and define protocol
++ Display of current settings and states (debug function already implemented [/dumpcfg])
++ Define UDP protocol
 + Default topics for peripherals
 + Add services settings vars
 
@@ -14,6 +13,8 @@
     + Add Motion Sensor
     	+ PIR Sensor
 	+ Ultrasonic Sensor
+    + MAX7219 Matrix Output (already written)
+    + other Display Outputs
 
 + Split source to different files and make it modular to specifiy different types of clients
   + Namespaces, Classes, ... default MQTT Structure

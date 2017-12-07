@@ -9,7 +9,7 @@ EXTRA_INCDIR = include
 ESP_HOME = /opt/esp-open-sdk
 
 ## SMING_HOME sets the path where Sming framework is located.
-SMING_HOME = /home/michael/workspace/ESP8266/ninHOME_MQTT_Client_Web/Sming/Sming
+SMING_HOME = Sming/Sming
 
 ## COM port parameter is reqruied to flash firmware correctly.
 COM_PORT = /dev/ttyUSB0

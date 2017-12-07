@@ -56,28 +56,49 @@
                     <legend>Choose your connected peripherals</legend>
                     <div class="col-md-offset-2">
                     		<div class="form-group">
-                            <label>Publish Timer Delay</label>
+                            <label>General Sensor Publish Timer Delay</label>
 	                         	<input class="form-control" style="width: 100px" type="text" name="timer_delay" value="{timer_delay}"> 
-	                         <label>ms</label>
+	                         ms
                         </div>
                         <br/>
                     		<div class="form-group">
                 				 <div class="checkbox">
                 				 	<label>
                 				 		<input type="checkbox" name="relay" {relay_on}>
-                				 		230V Relay
+                				 		230V Relay Switch
                 				 	</label>
+                				 </div>
+                				 <div class="col-md-offset-1">
+                				 	<label>Relay Pin</label>
+                				 	<input class="form-control" style="width: 50px" type="text" name="relay_pin" value="{relay_pin}">
                 				 </div>
                             <label>Switch Command Topic</label>
 	                         <input class="form-control" style="width: 250px" type="text" name="topic_relay_cmd" value="{topic_relay_cmd}">
 	                         <label>Switch Publish Topic</label>
 	                         <input class="form-control" style="width: 250px" type="text" name="topic_relay_pub" value="{topic_relay_pub}">
+	                         <div class="checkbox col-md-offset-1">
+                				 	<label>
+                				 		<input type="checkbox" name="keyinput" {keyinput_on}>
+                				 		Switch by Hardware Key
+                				 	</label>
+                				 </div>
+                				 <div class="col-md-offset-1">
+                				 	<label>Key Input Pin</label>
+                				 	<input class="form-control" style="width: 50px" type="text" name="keyinput_pin" value="{keyinput_pin}">
+                				 </div>
+                				 <div class="checkbox col-md-offset-1">
+                				 	<label>
+                				 		<input type="checkbox" name="keyinput_invert" {keyinput_invert}>
+                				 		Active Low
+                				 	</label>
+                				 </div>
                         </div>
                         <br/>
+                        
                         <div class="form-group">
                 				 <div class="checkbox">
                 				 	<label>
-                				 		<input type="checkbox" name="sensor_adc" {sensor_adc_on}>
+                				 		<input type="checkbox" name="adc" {adc_on}>
                 				 		Analog Sensor on ADC
                 				 	</label>
                 				 </div>
@@ -93,69 +114,8 @@
                              <label>Publish Topic ADC Value</label>
 	                          <input class="form-control" style="width: 250px" type="text" name="topic_adc_pub" value="{topic_adc}">
                         </div>
-                        <br/>
-                    		<div class="form-group">
-                				 <div class="checkbox">
-                				 	<label>
-                				 		<input type="checkbox" name="temp_dht11" {temp_dht11_on}>
-                				 		DHT11/21 Temperature / Humidity Sensor
-                				 	</label>
-                				 </div>
-                            <div class="checkbox">
-                            	  MQTT Publish?
-                                <label>
-                                    <input type="radio" value="1" name="temp_dht11_pub" {dht11_pub_on}> Yes
-                                </label>
-                                <label>
-                                    <input type="radio" value="0" name="temp_dht11_pub" {dht11_pub_off}> No
-                                </label>
-                             </div>
-                             <label>Publish Topic Temperature</label>
-	                          <input class="form-control" style="width: 250px" type="text" name="topic_dht11temp_pub" value="{topic_dht11t}">
-	                          <label>Publish Topic Humidity</label>
-	                          <input class="form-control" style="width: 250px" type="text" name="topic_dht11humi_pub" value="{topic_dht11h}">
-                        </div>
-                        <br/>
-                			<div class="form-group">
-                				 <div class="checkbox">
-                				 	<label>
-                				 		<input type="checkbox" name="temp_ds18b20" {temp_ds18b20_on}>
-                				 		DS18B20 Temperature Sensor
-                				 	</label>
-                				 </div>
-                            <div class="checkbox">
-                            	  MQTT Publish?
-                                <label>
-                                    <input type="radio" value="1" name="temp_d18b20_pub" {ds18_pub_on}> Yes
-                                </label>
-                                <label>
-                                    <input type="radio" value="0" name="temp_d18b20_pub" {ds18_pub_off}> No
-                                </label>
-                             </div>
-                             <label>Publish Topic</label>
-	                          <input class="form-control" style="width: 250px" type="text" name="topic_ds18b20_pub" value="{topic_ds18b20}">
-                        </div>
-                    		<br/>
-                    		<div class="form-group">
-                				 <div class="checkbox">
-                				 	<label>
-                				 		<input type="checkbox" name="temp_lm75" {temp_lm75_on}>
-                				 		LM75 Temperature Sensor
-                				 	</label>
-                				 </div>
-                            <div class="checkbox">
-                                MQTT Publish?
-                                <label>
-                                    <input type="radio" value="1" name="temp_lm75_pub" {lm75_pub_on}> Yes
-                                </label>
-                                <label>
-                                    <input type="radio" value="0" name="temp_lm75_pub" {lm75_pub_off}> No
-                                </label>
-                             </div>
-                             <label>Publish Topic</label>
-	                          <input class="form-control" style="width: 250px" type="text" name="topic_lm75_pub" value="{topic_lm75}">
-                         </div>
                          <br/>
+                         
                          <div class="form-group">
                 				 <div class="checkbox">
                 				 	<label>
@@ -171,6 +131,22 @@
 	                          <div class="rcdevices">{rcswitch_devs}</div>
                          </div>
                          <br/>
+                         <div class="form-group">
+                				 <div class="checkbox">
+                				 	<label>
+                				 		<input type="checkbox" name="max7219" {max7219_on}>
+                				 		MAX7219 LED Display Matrix
+                				 	</label>
+                				 </div>
+                				 <div>Note: It will be the Hardware SPI used, only the SS Pin is freely assignable</div><br/>
+                				  <label>Slave Select Pin</label>
+	                          <input class="form-control" style="width: 50px" type="text" name="max7219_pin" value="{max7219_pin}">
+	                          <label>Enable Topic</label>
+	                          <input class="form-control" style="width: 250px" type="text" name="topic_max7219" value="{topic_max7219}">
+                             <label>Scrolling Topic</label>
+	                          <input class="form-control" style="width: 250px" type="text" name="topic_max7219" value="{topic_max7219}">
+	                          <br/>
+                         </div>
                     </div>
                     <div class="col-md-offset-3">
                     	  <input type="submit" class="btn btn-success">
