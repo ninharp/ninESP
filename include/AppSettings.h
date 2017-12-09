@@ -80,12 +80,12 @@ struct ApplicationSettingsStorage
 
 	void loadAll()
 	{
-		loadGlobal();
+		loadNetwork();
 		loadMQTT();
 		loadPeriph();
 	}
 
-	void loadGlobal()
+	void loadNetwork()
 	{
 		DynamicJsonBuffer jsonBuffer;
 		if (existGlobal())
@@ -105,7 +105,7 @@ struct ApplicationSettingsStorage
 			netmask = network["netmask"].asString();
 			gateway = network["gateway"].asString();
 
-			udp = network["udp"].asString();
+			udp = network["udp"];
 			udp_port = String(network["udp_port"].asString()).toInt();
 
 			delete[] jsonString;
@@ -189,7 +189,20 @@ struct ApplicationSettingsStorage
 			}
 
 			/* MAX7219 Display Settings */
-			//TODO MAX7219 integration
+			if (periph.containsKey("max7219")) {
+				JsonObject& jmax7219 = periph["max7219"];
+				max7219 = jmax7219["enabled"];
+				max7219_count = String(jmax7219["count"].asString()).toInt();
+				max7219_ss_pin = String(jmax7219["pin"].asString()).toInt();
+				max7219_topic_prefix = jmax7219["topic_prefix"].asString();
+				max7219_topic_enable = jmax7219["topic_enable"].asString();
+				max7219_topic_text = jmax7219["topic_text"].asString();
+				max7219_topic_scroll = jmax7219["topic_scroll"].asString();
+				max7219_topic_speed = jmax7219["topic_speed"].asString();
+				max7219_topic_charwidth = jmax7219["topic_charwidth"].asString();
+				max7219_topic_intensity = jmax7219["topic_intensity"].asString();
+			}
+			/* uint8_t max7219_orientation = DEFAULT_MAX7219_ORIENTATION; */
 
 			delete[] jsonString;
 
@@ -256,6 +269,7 @@ struct ApplicationSettingsStorage
 		JsonObject& rcs = jsonBuffer.createObject();
 		JsonObject& jrelay = jsonBuffer.createObject();
 		JsonObject& jadc = jsonBuffer.createObject();
+		JsonObject& jmax7219 = jsonBuffer.createObject();
 
 		root["peripherals"] = periph;
 
@@ -290,6 +304,19 @@ struct ApplicationSettingsStorage
 			}
 		}
 		periph["rcswitch"] = rcs;
+
+		jmax7219["enabled"] = max7219;
+		jmax7219["count"] = max7219_count;
+		jmax7219["pin"] = max7219_ss_pin;
+		jmax7219["topic_prefix"] = max7219_topic_prefix;
+		jmax7219["topic_enable"] = max7219_topic_enable;
+		jmax7219["topic_text"] = max7219_topic_text;
+		jmax7219["topic_scroll"] = max7219_topic_scroll;
+		jmax7219["topic_speed"] = max7219_topic_speed;
+		jmax7219["topic_charwidth"] = max7219_topic_charwidth;
+		jmax7219["topic_intensity"] = max7219_topic_intensity;
+		periph["max7219"] = jmax7219;
+
 
 		String rootString;
 		root.printTo(rootString);

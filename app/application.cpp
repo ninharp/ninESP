@@ -280,12 +280,14 @@ void startMqttClient()
 /* Start used services for connected peripherals */
 void startServices()
 {
-	//TODO: Add UDP config blah
-	//if udp blah
-	/* Close any udp connections */
-	udp.close();
-	/* Start UDP Server */
-	udp.listen(AppSettings.udp_port);
+	if (AppSettings.udp) {
+		/* Close any udp connections */
+		udp.close();
+		/* Start UDP Server */
+		if (AppSettings.udp_port > 0)
+			udp.listen(AppSettings.udp_port);
+		//TODO UDPserver: else error wrong/no udp port assigned
+	}
 
 	/* Check if MQTT Connection is still alive */
 	if (mqtt.getConnectionState() != eTCS_Connected)
@@ -324,9 +326,15 @@ void onConfig(HttpRequest &request, HttpResponse &response)
 		AppSettings.ip = request.getPostParameter("ip");
 		AppSettings.netmask = request.getPostParameter("netmask");
 		AppSettings.gateway = request.getPostParameter("gateway");
+
+		AppSettings.udp = request.getPostParameter("udp").equals("on") ? true : false;;
+		AppSettings.udp_port = String(request.getPostParameter("udpport")).toInt();
+
 		debugf("Updating IP settings: %d", AppSettings.ip.isNull());
 		AppSettings.saveGlobal();
 	}
+
+	AppSettings.loadNetwork();
 
 	TemplateFileStream *tmpl = new TemplateFileStream("settings.html");
 	auto &vars = tmpl->variables();
@@ -334,6 +342,9 @@ void onConfig(HttpRequest &request, HttpResponse &response)
 	bool dhcp = WifiStation.isEnabledDHCP();
 	vars["dhcpon"] = dhcp ? "checked='checked'" : "";
 	vars["dhcpoff"] = !dhcp ? "checked='checked'" : "";
+
+	vars["udpon"] = AppSettings.udp ? "checked='checked'" : "";
+	vars["udpport"] = String(AppSettings.udp_port);
 
 	if (!WifiStation.getIP().isNull())
 	{
@@ -381,6 +392,18 @@ void onPeriphConfig(HttpRequest &request, HttpResponse &response)
 		AppSettings.rcswitch_pin = String(request.getPostParameter("rcswitch_pin")).toInt();
 		//TODO RCSWitch Save devices aswell
 
+		/* MAX7219 Display Settings */
+		AppSettings.max7219 = request.getPostParameter("max7219").equals("on") ? true : false;
+		AppSettings.max7219_count = String(request.getPostParameter("max7219_count")).toInt();
+		AppSettings.max7219_ss_pin = String(request.getPostParameter("max7219_pin")).toInt();
+		AppSettings.max7219_topic_prefix = request.getPostParameter("max7219_prefix");
+		AppSettings.max7219_topic_enable = request.getPostParameter("max7219_enable");
+		AppSettings.max7219_topic_text = request.getPostParameter("max7219_text");
+		AppSettings.max7219_topic_scroll = request.getPostParameter("max7219_scroll");
+		AppSettings.max7219_topic_speed = request.getPostParameter("max7219_speed");
+		AppSettings.max7219_topic_charwidth = request.getPostParameter("max7219_char");
+		AppSettings.max7219_topic_intensity = request.getPostParameter("max7219_int");
+
 		debugf("Updating Peripheral settings");
 
 		/* Save peripheral config */
@@ -410,14 +433,28 @@ void onPeriphConfig(HttpRequest &request, HttpResponse &response)
 	vars["keyinput_pin"] = AppSettings.keyinput_pin;
 	vars["keyinput_invert"] = AppSettings.keyinput_invert ? "checked='checked'" : "";
 
+	/* ADC Settings */
 	vars["adc_on"] = AppSettings.adc ? "checked='checked'" : "";
 	vars["topic_adc"] = AppSettings.adc_topic;
 	vars["adc_pub_on"] = AppSettings.adc_pub ? "checked='checked'" : "";
 	vars["adc_pub_off"] = !AppSettings.adc_pub ? "checked='checked'" : "";
 
+	/* RCSwitch Settings */
 	vars["rcswitch_on"] = AppSettings.rcswitch ? "checked='checked'" : "";
 	vars["topic_rcswitch"] = AppSettings.rcswitch_topic_prefix;
 	vars["rcswitch_pin"] = AppSettings.rcswitch_pin;
+
+	/* MAX7219 Settings */
+	vars["max7219_on"] = AppSettings.max7219 ? "checked='checked'" : "";
+	vars["max7219_count"] = AppSettings.max7219_count;
+	vars["max7219_pin"] = AppSettings.max7219_ss_pin;
+	vars["max7219_prefix"] = AppSettings.max7219_topic_prefix;
+	vars["max7219_enable"] = AppSettings.max7219_topic_enable;
+	vars["max7219_text"] = AppSettings.max7219_topic_text;
+	vars["max7219_scroll"] = AppSettings.max7219_topic_scroll;
+	vars["max7219_speed"] = AppSettings.max7219_topic_speed;
+	vars["max7219_char"] = AppSettings.max7219_topic_charwidth;
+	vars["max7219_int"] = AppSettings.max7219_topic_intensity;
 
 	vars["lastedit"] = lastModified;
 
