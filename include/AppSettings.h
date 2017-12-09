@@ -59,10 +59,24 @@ struct ApplicationSettingsStorage
 	String adc_topic = DEFAULT_ADC_TOPIC;
 
 	bool rcswitch = DEFAULT_RCSWITCH;
-	String rcswitch_topic = DEFAULT_RCSWITCH_TOPIC;
+	//TODO: Prefix for rcswitch
+	String rcswitch_topic_prefix = DEFAULT_RCSWITCH_TOPIC_PREFIX;
 	uint8_t rcswitch_count = 0;
 	int8_t rcswitch_pin = DEFAULT_RCSWITCH_PIN;
 	Vector<Vector <String>> rcswitch_dev;
+
+	bool max7219 = DEFAULT_MAX7219;
+	uint8_t max7219_count = DEFAULT_MAX7219_COUNT;
+	int8_t max7219_ss_pin = DEFAULT_MAX7219_SS_PIN;
+	String max7219_text = DEFAULT_MAX7219_TEXT;
+	uint8_t max7219_orientation = DEFAULT_MAX7219_ORIENTATION;
+	String max7219_topic_prefix = DEFAULT_MAX7219_TOPIC_PREFIX;
+	String max7219_topic_enable = DEFAULT_MAX7219_TOPIC_ENABLE;
+	String max7219_topic_scroll = DEFAULT_MAX7219_TOPIC_SCROLL;
+	String max7219_topic_speed = DEFAULT_MAX7219_TOPIC_SPEED;
+	String max7219_topic_charwidth = DEFAULT_MAX7219_TOPIC_CHARWIDTH;
+	String max7219_topic_intensity = DEFAULT_MAX7219_TOPIC_INTENSITY;
+	String max7219_topic_text = DEFAULT_MAX7219_TOPIC_TEXT;
 
 	void loadAll()
 	{
@@ -156,7 +170,7 @@ struct ApplicationSettingsStorage
 			/* RCSwitch Settings */
 			JsonObject& rcs = periph["rcswitch"];
 			rcswitch = rcs["enabled"];
-			rcswitch_topic = rcs["topic"].asString();
+			rcswitch_topic_prefix = rcs["topic"].asString();
 			String tmp = rcs["count"].asString();
 			if (tmp.length() >= 1)
 				rcswitch_count = tmp.toInt();
@@ -179,7 +193,7 @@ struct ApplicationSettingsStorage
 
 			delete[] jsonString;
 
-			debugf("rcswitch_topic = %s", rcswitch_topic.c_str());
+			debugf("rcswitch_topic = %s", rcswitch_topic_prefix.c_str());
 			debugf("rcswitch_count = %d", rcswitch_count);
 			for (int i = 0; i < rcswitch_count; i++) {
 				debugf("rcswitch_dev[%d] = %s-%s", i, rcswitch_dev[i][0].c_str(), rcswitch_dev[i][1].c_str());
@@ -263,7 +277,7 @@ struct ApplicationSettingsStorage
 
 		rcs["enabled"] = rcswitch;
 		rcs["pin"] = rcswitch_pin;
-		rcs["topic"] = rcswitch_topic;
+		rcs["topic"] = rcswitch_topic_prefix;
 		rcs["count"] = rcswitch_count;
 		if (rcswitch_count > 0) {
 			JsonObject& rc_devs = jsonBuffer.createObject();
@@ -276,15 +290,6 @@ struct ApplicationSettingsStorage
 			}
 		}
 		periph["rcswitch"] = rcs;
-
-		JsonObject& rc_devs = jsonBuffer.createObject();
-		rcs["devices"] = rc_devs;
-		for (int i = 0; i < rcswitch_count; i++) {
-			JsonObject& rc_dev = jsonBuffer.createObject();
-			rc_devs[String(i)] = rc_dev;
-			rc_dev["0"] = rcswitch_dev[i][0];
-			rc_dev["1"] = rcswitch_dev[i][1];
-		}
 
 		String rootString;
 		root.printTo(rootString);

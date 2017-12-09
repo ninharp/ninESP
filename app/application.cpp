@@ -5,6 +5,7 @@
 #include <Libraries/RCSwitch/RCSwitch.h>
 #include <RelaySwitch.h>
 #include <ninMQTTClient.h>
+#include <LedMatrix.h>
 
 //#define printf_P_stack
 
@@ -37,6 +38,10 @@ ninMqttClient mqtt(DEFAULT_MQTT_SERVER, DEFAULT_MQTT_PORT, false, onMQTTMessageR
 /* RelaySwitch and RCSwitch instance */
 RCSwitch rcSwitch = RCSwitch();
 RelaySwitch relay = RelaySwitch();
+
+LedMatrix led = LedMatrix(DEFAULT_MAX7219_COUNT, DEFAULT_MAX7219_SS_PIN);
+
+Timer displayTimer;
 
 /* Timer for make connection ajax callback */
 Timer connectionTimer;
@@ -126,35 +131,57 @@ void onMQTTMessageReceived(String topic, String message)
 	}
 
 	/* RC Switch relay */
-	if (message.equals("on1")) {
-		rcSwitch.switchOn("11111", "00001");
-	}
-	else if (message.equals("on2")) {
-		rcSwitch.switchOn("11111", "00010");
-	}
-	else if (message.equals("on3")) {
-		rcSwitch.switchOn("11111", "00011");
-	}
-	else if (message.equals("on4")) {
-		rcSwitch.switchOn("11111", "00100");
-	}
-	else if (message.equals("on5")) {
-		rcSwitch.switchOn(2, 1);
-	}
-	else if (message.equals("off1")) {
-		rcSwitch.switchOff("11111", "00001");
-	}
-	else if (message.equals("off2")) {
-		rcSwitch.switchOff("11111", "00010");
-	}
-	else if (message.equals("off3")) {
-		rcSwitch.switchOff("11111", "00011");
-	}
-	else if (message.equals("off4")) {
-		rcSwitch.switchOff("11111", "00100");
-	}
-	else if (message.equals("off5")) {
-		rcSwitch.switchOff(2, 1);
+	if (AppSettings.rcswitch && (AppSettings.rcswitch_count > 0)) {
+		for (uint8_t c = 0; c < AppSettings.rcswitch_count; c++) {
+			Vector<String> dev = AppSettings.rcswitch_dev.get(c);
+			String m0 = dev.get(0);
+			String m1 = dev.get(1);
+			if (topic.equals(AppSettings.rcswitch_topic_prefix + String(c))) {
+				if (message.equals("on") || message.equals("1")) { // Relay ON
+					if (m0.length() == 5)
+						rcSwitch.switchOn(m0.c_str(), m1.c_str());
+					else
+						rcSwitch.switchOn((int)m0.toInt(), (int)m1.toInt());
+				} else if (message.equals("off") || message.equals("0")) { // Relay OFF
+					if (m0.length() == 5)
+						rcSwitch.switchOff(m0.c_str(), m1.c_str());
+					else
+						rcSwitch.switchOff((int)m0.toInt(), (int)m1.toInt());
+				}
+			}
+		}
+		/*
+		if (message.equals("on1")) {
+			rcSwitch.switchOn("11111", "00001");
+		}
+		else if (message.equals("on2")) {
+			rcSwitch.switchOn("11111", "00010");
+		}
+		else if (message.equals("on3")) {
+			rcSwitch.switchOn("11111", "00011");
+		}
+		else if (message.equals("on4")) {
+			rcSwitch.switchOn("11111", "00100");
+		}
+		else if (message.equals("on5")) {
+			rcSwitch.switchOn(2, 1);
+		}
+		else if (message.equals("off1")) {
+			rcSwitch.switchOff("11111", "00001");
+		}
+		else if (message.equals("off2")) {
+			rcSwitch.switchOff("11111", "00010");
+		}
+		else if (message.equals("off3")) {
+			rcSwitch.switchOff("11111", "00011");
+		}
+		else if (message.equals("off4")) {
+			rcSwitch.switchOff("11111", "00100");
+		}
+		else if (message.equals("off5")) {
+			rcSwitch.switchOff(2, 1);
+		}
+		*/
 	}
 	/* RCSwitch relay end */
 }
@@ -162,7 +189,6 @@ void onMQTTMessageReceived(String topic, String message)
 /* Timer callback function to publish values from attached sensors */
 void sensorPublish()
 {
-	debugf("sensorPublish()");
 	/* If ADC is enabled */
 	if (AppSettings.adc) {
 		/* Read out ADC value */
@@ -175,6 +201,7 @@ void sensorPublish()
 
 			/* Publish mqtt adc value */
 			mqtt.publish(AppSettings.adc_topic, String(a), true);
+			debugf("sensorPublish() ADC published");
 		}
 	}
 }
@@ -185,8 +212,10 @@ void startMqttClient()
 	if (mqtt.isEnabled()) {
 
 		/* Set LWT message and topic */
-		if(!mqtt.setWill(AppSettings.mqtt_topic_lwt, "offline", 1, true)) {
+		if(!mqtt.setWill(AppSettings.mqtt_topic_lwt, "offline", 2, true)) {
 			debugf("Unable to set the last will and testament. Most probably there is not enough memory on the device.");
+		} else {
+			debugf("MQTT Last-Will and testament set");
 		}
 
 		/* Populate MQTT Settings from configuration */
@@ -228,11 +257,22 @@ void startMqttClient()
 		}
 
 		if (AppSettings.rcswitch) {
-			mqtt.subscribe(AppSettings.rcswitch_topic);
+			//TODO: Check if topic prefix got already trailing / and/or #
+			mqtt.subscribe(AppSettings.rcswitch_topic_prefix + "#");
 			rcSwitch.enableTransmit(AppSettings.rcswitch_pin);
 		} else {
-			mqtt.unsubscribe(AppSettings.rcswitch_topic);
+			mqtt.unsubscribe(AppSettings.rcswitch_topic_prefix + "#");
 			rcSwitch.disableTransmit();
+		}
+
+		if (AppSettings.max7219) {
+			mqtt.subscribe(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_enable);
+			mqtt.subscribe(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_text);
+			mqtt.subscribe(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_charwidth);
+			mqtt.subscribe(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_speed);
+			mqtt.subscribe(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_scroll);
+			mqtt.subscribe(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_intensity);
+			//mqtt.subscribe("client2/display/oscil");
 		}
 	}
 }
@@ -337,7 +377,7 @@ void onPeriphConfig(HttpRequest &request, HttpResponse &response)
 
 		/* RCSwitch Settings */
 		AppSettings.rcswitch = request.getPostParameter("rcswitch").equals("on") ? true : false;
-		AppSettings.rcswitch_topic = request.getPostParameter("topic_rcswitch");
+		AppSettings.rcswitch_topic_prefix = request.getPostParameter("topic_rcswitch");
 		AppSettings.rcswitch_pin = String(request.getPostParameter("rcswitch_pin")).toInt();
 		//TODO RCSWitch Save devices aswell
 
@@ -349,11 +389,11 @@ void onPeriphConfig(HttpRequest &request, HttpResponse &response)
 		/* Start services again */
 		startServices();
 
-		/* Set interval of sensor Publishing, even if its not changed, doesnt matter */
-		sensorPublishTimer.setIntervalMs(AppSettings.timer_delay);
-	} else {
-		//AppSettings.loadPeriph();
+		/* Set interval of sensor Publishing if timer was started before */
+		if (sensorPublishTimer.isStarted())
+			sensorPublishTimer.setIntervalMs(AppSettings.timer_delay);
 	}
+
 	AppSettings.loadPeriph();
 
 	TemplateFileStream *tmpl = new TemplateFileStream("periph.html");
@@ -376,7 +416,7 @@ void onPeriphConfig(HttpRequest &request, HttpResponse &response)
 	vars["adc_pub_off"] = !AppSettings.adc_pub ? "checked='checked'" : "";
 
 	vars["rcswitch_on"] = AppSettings.rcswitch ? "checked='checked'" : "";
-	vars["topic_rcswitch"] = AppSettings.rcswitch_topic;
+	vars["topic_rcswitch"] = AppSettings.rcswitch_topic_prefix;
 	vars["rcswitch_pin"] = AppSettings.rcswitch_pin;
 
 	vars["lastedit"] = lastModified;
@@ -740,7 +780,10 @@ void connectOk(IPAddress ip, IPAddress mask, IPAddress gateway)
 	startServices();
 
 	/* Start Timer for publishing attached sensor values, interval from settings */
-	sensorPublishTimer.initializeMs(AppSettings.timer_delay, sensorPublish).start();
+	/* Add every sensor who want to publish something here */
+	if (AppSettings.adc) {
+		sensorPublishTimer.initializeMs(AppSettings.timer_delay, sensorPublish).start();
+	}
 	//stopAP(); TODO: When to stop AP? Or manually triggered in webinterface?
 }
 
@@ -829,6 +872,13 @@ void initNode()
 	/* If a relay attached and enabled in settings we init it here */
 	if (AppSettings.relay)
 		relay.init(AppSettings.relay_pin, false);
+
+	if (AppSettings.max7219) {
+		led.init(AppSettings.max7219_count, AppSettings.max7219_ss_pin);
+		led.setIntensity(DEFAULT_MAX7219_INTENSITY); // range is 0-15
+		led.setText(DEFAULT_MAX7219_TEXT);
+		led.setDeviceOrientation(AppSettings.max7219_orientation);
+	}
 
 	/* Register onReady callback to run services on system ready */
 	System.onReady(startServers);

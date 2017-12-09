@@ -3,8 +3,8 @@
 + Error checking in ajax web
 + Display of current settings and states (debug function already implemented [/dumpcfg])
 + Define UDP protocol
-+ Default topics for peripherals
 + Add services settings vars
++ Change PIN setting in webinterface to dropdown
 
 + Define MQTT Topic Structure
 

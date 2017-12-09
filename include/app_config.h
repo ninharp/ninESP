@@ -46,9 +46,9 @@
 /* MQTT Settings */
 #define DEFAULT_MQTT_SERVER "test.mosquitto.org"
 #define DEFAULT_MQTT_PORT 1883
-#define DEFAULT_MQTT_LWT "lwt/client/id"
-#define DEFAULT_MQTT_CMD "lwt/#"
-#define DEFAULT_MQTT_PUB "default/topic"
+#define DEFAULT_MQTT_LWT "lwt/client"
+#define DEFAULT_MQTT_CMD "cmd/client"
+#define DEFAULT_MQTT_PUB "clients/client"
 #define DEFAULT_MQTT_USERID "ninHOME_Client"
 #define DEFAULT_MQTT_LOGIN "user"
 #define DEFAULT_MQTT_PASS "password"
@@ -65,6 +65,21 @@
 /* RCSwitch Settings */
 #define DEFAULT_RCSWITCH false
 #define DEFAULT_RCSWITCH_PIN 4 //D2
-#define DEFAULT_RCSWITCH_TOPIC "client/rcswitch"
+#define DEFAULT_RCSWITCH_TOPIC_PREFIX "client/rcswitch/"
+
+/* MAX7219 Display */
+#define DEFAULT_MAX7219 false
+#define DEFAULT_MAX7219_SS_PIN 2
+#define DEFAULT_MAX7219_COUNT 1
+#define DEFAULT_MAX7219_TEXT ""
+#define DEFAULT_MAX7219_ORIENTATION 1
+#define DEFAULT_MAX7219_INTENSITY 7
+#define DEFAULT_MAX7219_TOPIC_PREFIX "client/display/"
+#define DEFAULT_MAX7219_TOPIC_ENABLE "enable"
+#define DEFAULT_MAX7219_TOPIC_SCROLL "scroll"
+#define DEFAULT_MAX7219_TOPIC_SPEED "speed"
+#define DEFAULT_MAX7219_TOPIC_CHARWIDTH "charwidth"
+#define DEFAULT_MAX7219_TOPIC_TEXT "text"
+#define DEFAULT_MAX7219_TOPIC_INTENSITY "intensity"
 
 #endif /* INCLUDE_APP_CONFIG_H_ */
