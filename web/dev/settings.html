@@ -87,6 +87,25 @@
 		<div class="alert alert-warning" role="alert">Changes will be applied after reboot</div>
         <h2>Settings</h2>
             <form method="post" action="">
+            	 <fieldset>
+                    <legend>Status</legend>
+                    <div class="col-md-offset-2">
+                        <div class="form-group">
+                            <div class="form-group">
+                               <label>
+                				 		Status LED Pin
+                				 		<input class="form-control" style="width: 50px" type="text" name="statuspin" value="{statuspin}">
+                				 	</label>
+                            </div>
+                            <div class="checkbox">
+                               <label>
+                				 		<input type="checkbox" name="statusinv" {statusinv}>
+                				 		Inverted
+                				 	</label>
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
                 <fieldset>
                     <legend>Network IP Address</legend>
                     <div class="col-md-offset-2">

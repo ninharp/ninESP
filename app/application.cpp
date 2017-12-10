@@ -27,6 +27,7 @@ void onMQTTMessageReceived(String topic, String message);
 void connectOk(IPAddress ip, IPAddress mask, IPAddress gateway);
 void connectFail(String ssid, uint8_t ssidLength, uint8_t *bssid, uint8_t reason);
 void onReceiveUDP(UdpConnection& connection, char *data, int size, IPAddress remoteIP, uint16_t remotePort);
+void statusLed(bool state);
 
 /* UDP Connection instance */
 UdpConnection udp = UdpConnection(onReceiveUDP);
@@ -126,6 +127,7 @@ void onMQTTMessageReceived(String topic, String message)
 				startMqttClient(); // Auto reconnect
 
 			/* Publish current relay state */
+			//TODO problem?
 			mqtt.publish(AppSettings.relay_topic_pub, "0", true);
 		}
 	}
@@ -239,21 +241,21 @@ void startMqttClient()
 			/* Check if set topics are at least 1 byte long */
 			if ((AppSettings.relay_topic_cmd.length() >= 1) && (AppSettings.relay_topic_pub.length() >= 1)) {
 				/* Check if topic backup is set */
-				if (AppSettings.relay_topic_cmd_old.length() > 0)
-					mqtt.unsubscribe(AppSettings.relay_topic_cmd_old); /* Unsubscribe backup relay topic, for changes in webinterface */
+				//if (AppSettings.relay_topic_cmd_old.length() > 0)
+				//	mqtt.unsubscribe(AppSettings.relay_topic_cmd_old); /* Unsubscribe backup relay topic, for changes in webinterface */
 				mqtt.subscribe(AppSettings.relay_topic_cmd); /* Resubscribe relay topic */
 				/* Set backup relay topic to current relay topic */
 				AppSettings.relay_topic_cmd_old = AppSettings.relay_topic_cmd;
 			} else {
 				// TODO: show error for to short relay topics with ajax
 			}
-		} else {
+		//} else {
 			/* detach Interrupt pin if enabled in config */
 			//detachInterrupt(KEY_INPUT_PIN);
 			/* Relay is not enabled in config, check if there is a topic set and unsubscribe if so */
-			if (AppSettings.relay_topic_cmd.length() >= 1) {
+			/*if (AppSettings.relay_topic_cmd.length() >= 1) {
 				mqtt.unsubscribe(AppSettings.relay_topic_cmd_old);
-			}
+			}*/
 		}
 
 		if (AppSettings.rcswitch) {
@@ -261,7 +263,7 @@ void startMqttClient()
 			mqtt.subscribe(AppSettings.rcswitch_topic_prefix + "#");
 			rcSwitch.enableTransmit(AppSettings.rcswitch_pin);
 		} else {
-			mqtt.unsubscribe(AppSettings.rcswitch_topic_prefix + "#");
+			//mqtt.unsubscribe(AppSettings.rcswitch_topic_prefix + "#");
 			rcSwitch.disableTransmit();
 		}
 
@@ -322,22 +324,28 @@ void onConfig(HttpRequest &request, HttpResponse &response)
 	/* If values are passed from browser we will set here */
 	if (request.method == HTTP_POST)
 	{
+		AppSettings.status_led_pin = request.getPostParameter("statuspin").toInt();
+		AppSettings.status_led_inv = request.getPostParameter("statusinv").equals("on") ? true : false;
+
 		AppSettings.dhcp = request.getPostParameter("dhcp") == "1";
 		AppSettings.ip = request.getPostParameter("ip");
 		AppSettings.netmask = request.getPostParameter("netmask");
 		AppSettings.gateway = request.getPostParameter("gateway");
 
 		AppSettings.udp = request.getPostParameter("udp").equals("on") ? true : false;;
-		AppSettings.udp_port = String(request.getPostParameter("udpport")).toInt();
+		AppSettings.udp_port = request.getPostParameter("udpport").toInt();
 
 		debugf("Updating IP settings: %d", AppSettings.ip.isNull());
-		AppSettings.saveGlobal();
+		AppSettings.saveNetwork();
 	}
 
 	AppSettings.loadNetwork();
 
 	TemplateFileStream *tmpl = new TemplateFileStream("settings.html");
 	auto &vars = tmpl->variables();
+
+	vars["statuspin"] = String(AppSettings.status_led_pin);
+	vars["statusinv"] = AppSettings.status_led_inv ? "checked='checked'" : "";
 
 	bool dhcp = WifiStation.isEnabledDHCP();
 	vars["dhcpon"] = dhcp ? "checked='checked'" : "";
@@ -375,6 +383,7 @@ void onPeriphConfig(HttpRequest &request, HttpResponse &response)
 		/* Relay Settings */
 		AppSettings.relay = request.getPostParameter("relay").equals("on") ? true : false;
 		AppSettings.relay_pin = String(request.getPostParameter("relay_pin")).toInt();
+		AppSettings.relay_invert = request.getPostParameter("relay_invert").equals("on") ? true : false;
 		AppSettings.relay_topic_pub = request.getPostParameter("topic_relay_pub");
 		AppSettings.relay_topic_cmd = request.getPostParameter("topic_relay_cmd");
 		AppSettings.keyinput = request.getPostParameter("keyinput_on").equals("on") ? true : false;
@@ -413,8 +422,14 @@ void onPeriphConfig(HttpRequest &request, HttpResponse &response)
 		startServices();
 
 		/* Set interval of sensor Publishing if timer was started before */
-		if (sensorPublishTimer.isStarted())
+		if (sensorPublishTimer.isStarted()) {
 			sensorPublishTimer.setIntervalMs(AppSettings.timer_delay);
+		} else {
+			if (AppSettings.adc) {
+				sensorPublishTimer.setIntervalMs(AppSettings.timer_delay);
+				sensorPublishTimer.start();
+			}
+		}
 	}
 
 	AppSettings.loadPeriph();
@@ -427,6 +442,7 @@ void onPeriphConfig(HttpRequest &request, HttpResponse &response)
 	/* Relay Settings */
 	vars["relay_on"] = AppSettings.relay ? "checked='checked'" : "";
 	vars["relay_pin"] = AppSettings.relay_pin;
+	vars["relay_invert"] = AppSettings.relay_invert ? "checked='checked'" : "";
 	vars["topic_relay_cmd"] = AppSettings.relay_topic_cmd;
 	vars["topic_relay_pub"] = AppSettings.relay_topic_pub;
 	vars["keyinput_on"] = AppSettings.keyinput ? "checked='checked'" : "";
@@ -629,7 +645,7 @@ void makeConnection()
 	AppSettings.ssid = network;
 	AppSettings.password = password;
 	/* Save all config files from values of AppSettings */
-	AppSettings.saveGlobal();
+	AppSettings.saveNetwork();
 	debugf("Making Connection");
 
 	/* Small delay to let him connect */
@@ -748,7 +764,7 @@ void startServers()
 void startAP()
 {
 	/* Put on Setup LED Indicator to indicate running ap */
-	digitalWrite(LED_SETUP_PIN, 1);
+	statusLed(true);
 
 	/* Start AP for configuration */
 	WifiAccessPoint.enable(true);
@@ -767,7 +783,7 @@ void stopAP()
 		WifiAccessPoint.enable(false);
 
 	/* Put off Setup LED Indicator */
-	digitalWrite(LED_SETUP_PIN, 0);
+	statusLed(false);
 
 	//TODO: disable mDNS server on stopAP()
 	/* Stop mDNS server */
@@ -839,26 +855,31 @@ void connectFail(String ssid, uint8_t ssidLength, uint8_t *bssid, uint8_t reason
 	}
 }
 
-/* Init General GPIO settings */
-void initIO()
+void statusLed(bool state)
 {
-	pinMode(LED_SETUP_PIN, OUTPUT);
-	//pinMode(KEY_INPUT_PIN, INPUT_PULLUP);
-	//pinMode(A0, INPUT);
+	if (AppSettings.status_led_pin > -1) {
+		pinMode(AppSettings.status_led_pin, OUTPUT);
+		if (AppSettings.status_led_inv)
+			state = !state;
+		digitalWrite(AppSettings.status_led_pin, state);
+	}
+}
+
+bool getStatusLed()
+{
+	if (AppSettings.status_led_pin > -1) {
+		if (AppSettings.status_led_inv)
+			return !digitalRead(AppSettings.status_led_pin);
+		else
+			return digitalRead(AppSettings.status_led_pin);
+	} else {
+		return false;
+	}
 }
 
 /* Initializes the ninHome Node and start attached peripherals */
 void initNode()
 {
-	/* Init General IO Ports */
-	initIO();
-
-	/* Blink Setup LED 3 Times to indicate starting */
-	for (uint8_t i = 1; i <= 6; i++) {
-		digitalWrite(LED_SETUP_PIN, !digitalRead(LED_SETUP_PIN));
-		delay(200);
-	}
-
 	/* Load Last Modified Timestamp from the Webcontent */
 	if(fileExist(".lastModified")) {
 		// The last modification
@@ -876,6 +897,14 @@ void initNode()
 	{
 		/* Load other configuration files */
 		AppSettings.loadAll();
+
+		statusLed(false);
+
+		/* Blink Setup LED 3 Times to indicate starting */
+		for (uint8_t i = 1; i <= 6; i++) {
+			statusLed(!getStatusLed());
+			delay(200);
+		}
 
 		/* If there is any ssid set then assume there is a network set */
 		if (AppSettings.ssid.length() > 0) {
@@ -908,7 +937,7 @@ void initNode()
 
 	/* If a relay attached and enabled in settings we init it here */
 	if (AppSettings.relay)
-		relay.init(AppSettings.relay_pin, false);
+		relay.init(AppSettings.relay_pin, AppSettings.relay_invert, false);
 
 	if (AppSettings.max7219) {
 		led.init(AppSettings.max7219_count, AppSettings.max7219_ss_pin);

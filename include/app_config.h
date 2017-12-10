@@ -20,12 +20,13 @@
 #define DEFAULT_MDNS_SERVERNAME "ninHOME"
 #define DEFAULT_MDNS_SERVERPORT 80
 
-#define LED_SETUP_PIN 15 // 15/D8  // Display = 0 / Main = 15
+#define DEFAULT_LED_SETUP_PIN 15 // 15/D8  // Display = 0 / Main = 15
 //#define RESET_PIN 13 // 13/D7  // Display = 13 / Main = 4
 
 /* Relay Settings */
 #define DEFAULT_RELAY false
 #define DEFAULT_RELAY_PIN 14 //D5
+#define DEFAULT_RELAY_INVERT false
 #define DEFAULT_RELAY_TOPIC_CMD "client/relay"
 #define DEFAULT_RELAY_TOPIC_PUB "client/relaystate"
 

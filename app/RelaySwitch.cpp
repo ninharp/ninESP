@@ -14,11 +14,15 @@ RelaySwitch::RelaySwitch()
 	pin = -1;
 }
 
-void RelaySwitch::init(int8_t pin, bool defState = false)
+void RelaySwitch::init(int8_t pin, bool inverted = false, bool defState = false)
 {
 	pinMode(pin, OUTPUT);
 	this->pin = pin;
-	digitalWrite(pin, defState);
+	this->inverted = inverted;
+	if (inverted)
+		digitalWrite(pin, !defState);
+	else
+		digitalWrite(pin, defState);
 }
 
 bool RelaySwitch::get(void)
@@ -31,11 +35,17 @@ void RelaySwitch::set(bool state)
 	if (state) {
 		debugf("Relay ON");
 		state = true;
-		digitalWrite(pin, 0);
+		if (inverted)
+			digitalWrite(pin, 0);
+		else
+			digitalWrite(pin, 1);
 	} else {
 		debugf("Relay OFF");
 		state = false;
-		digitalWrite(pin, 1);
+		if (inverted)
+			digitalWrite(pin, 1);
+		else
+			digitalWrite(pin, 0);
 	}
 }
 

@@ -31,6 +31,9 @@ struct ApplicationSettingsStorage
 	bool udp = DEFAULT_UDP;
 	uint16_t udp_port = DEFAULT_UDP_PORT;
 
+	int8_t status_led_pin = -1;
+	bool status_led_inv = false;
+
 	/* MQTT Config */
 	bool mqtt_enabled = false;
 	String mqtt_server = DEFAULT_MQTT_SERVER;
@@ -47,6 +50,7 @@ struct ApplicationSettingsStorage
 
 	bool relay = DEFAULT_RELAY;
 	int8_t relay_pin = DEFAULT_RELAY_PIN;
+	bool relay_invert = DEFAULT_RELAY_INVERT;
 	String relay_topic_cmd = DEFAULT_RELAY_TOPIC_CMD;
 	String relay_topic_cmd_old = "";
 	String relay_topic_pub = DEFAULT_RELAY_TOPIC_PUB;
@@ -94,6 +98,10 @@ struct ApplicationSettingsStorage
 			char* jsonString = new char[size + 1];
 			fileGetContent(APP_GLOBAL_SETTINGS_FILE, jsonString, size + 1);
 			JsonObject& root = jsonBuffer.parseObject(jsonString);
+
+			JsonObject& general = root["general"];
+			status_led_pin = general["status_pin"];
+			status_led_inv = general["status_inv"];
 
 			JsonObject& network = root["network"];
 			ssid = network["ssid"].asString();
@@ -155,6 +163,7 @@ struct ApplicationSettingsStorage
 			JsonObject& jrelay = periph["relay"];
 			relay = jrelay["enabled"];
 			relay_pin = String(jrelay["pin"].asString()).toInt();
+			relay_invert = jrelay["inverted"];
 			keyinput = jrelay["keyinput"];
 			keyinput_invert = jrelay["invert"];
 			keyinput_pin = String(jrelay["pin"].asString()).toInt();
@@ -214,10 +223,15 @@ struct ApplicationSettingsStorage
 		  }
 	}
 
-	void saveGlobal()
+	void saveNetwork()
 	{
 		DynamicJsonBuffer jsonBuffer;
 		JsonObject& root = jsonBuffer.createObject();
+
+		JsonObject& general = jsonBuffer.createObject();
+		root["general"] = general;
+		general["status_pin"] = status_led_pin;
+		general["status_inv"] = status_led_inv;
 
 		JsonObject& network = jsonBuffer.createObject();
 		root["network"] = network;
@@ -277,6 +291,7 @@ struct ApplicationSettingsStorage
 
 		jrelay["enabled"] = relay;
 		jrelay["pin"] = relay_pin;
+		jrelay["inverted"] = relay_invert;
 		jrelay["keyinput"] = keyinput;
 		jrelay["keyinput_invert"] = keyinput_invert;
 		jrelay["keyinput_pin"] = keyinput_pin;
