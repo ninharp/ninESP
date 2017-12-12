@@ -12,11 +12,16 @@ RelaySwitch::RelaySwitch()
 {
 	state = false;
 	pin = -1;
+	status_pin = -1;
 }
 
-void RelaySwitch::init(int8_t pin, bool inverted = false, bool defState = false)
+void RelaySwitch::init(int8_t pin, int8_t status_pin, bool inverted = false, bool defState = false)
 {
 	pinMode(pin, OUTPUT);
+	this->status_pin = status_pin;
+	if (status_pin > -1) {
+		pinMode(status_pin, OUTPUT);
+	}
 	this->pin = pin;
 	this->inverted = inverted;
 	if (inverted)
@@ -39,6 +44,10 @@ void RelaySwitch::set(bool state)
 			digitalWrite(pin, 0);
 		else
 			digitalWrite(pin, 1);
+
+		if (status_pin > -1) {
+			digitalWrite(status_pin, 1);
+		}
 	} else {
 		debugf("Relay OFF");
 		state = false;
@@ -46,12 +55,19 @@ void RelaySwitch::set(bool state)
 			digitalWrite(pin, 1);
 		else
 			digitalWrite(pin, 0);
+
+		if (status_pin > -1) {
+			digitalWrite(status_pin, 0);
+		}
 	}
 }
 
 void RelaySwitch::toggle(void)
 {
 	digitalWrite(pin, !state);
+	if (status_pin > -1) {
+		digitalWrite(status_pin, !state);
+	}
 	//mqtt.publish(AppSettings.relay_topic_pub, "on", true);
 }
 

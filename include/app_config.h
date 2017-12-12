@@ -20,7 +20,9 @@
 #define DEFAULT_MDNS_SERVERNAME "ninHOME"
 #define DEFAULT_MDNS_SERVERPORT 80
 
-#define DEFAULT_LED_SETUP_PIN 15 // 15/D8  // Display = 0 / Main = 15
+#define DEFAULT_CONNECT_CHECK_INTERVAL 3000
+
+//#define DEFAULT_LED_SETUP_PIN 15 // 15/D8  // Display = 0 / Main = 15
 //#define RESET_PIN 13 // 13/D7  // Display = 13 / Main = 4
 
 /* Relay Settings */
@@ -43,6 +45,13 @@
 #define DEFAULT_ADC false
 #define DEFAULT_ADC_PUBLISH false
 #define DEFAULT_ADC_TOPIC "client/adc"
+
+/* Motion Sensor Settings */
+#define DEFAULT_MOTION_SENSOR false
+#define DEFAULT_MOTION_PIN 12
+#define DEFAULT_MOTION_INVERT false
+#define DEFAULT_MOTION_INTERVAL 100
+#define DEFAULT_MOTION_TOPIC "client/motion"
 
 /* MQTT Settings */
 #define DEFAULT_MQTT_SERVER "test.mosquitto.org"

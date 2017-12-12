@@ -28,6 +28,7 @@ void connectOk(IPAddress ip, IPAddress mask, IPAddress gateway);
 void connectFail(String ssid, uint8_t ssidLength, uint8_t *bssid, uint8_t reason);
 void onReceiveUDP(UdpConnection& connection, char *data, int size, IPAddress remoteIP, uint16_t remotePort);
 void statusLed(bool state);
+void motionSensorCheck();
 
 /* UDP Connection instance */
 UdpConnection udp = UdpConnection(onReceiveUDP);
@@ -49,6 +50,13 @@ Timer connectionTimer;
 
 /* Timer for publishing sensor values */
 Timer sensorPublishTimer;
+
+/* Timer to check for connection */
+Timer checkConnectionTimer;
+
+/* Timer to check for motion on motion sensor */
+Timer motionCheckTimer;
+bool motionState = false;
 
 /* IRQ Callback for interrupt of key input
 void IRAM_ATTR keyIRQHandler()
@@ -290,12 +298,14 @@ void startServices()
 			udp.listen(AppSettings.udp_port);
 		//TODO UDPserver: else error wrong/no udp port assigned
 	}
+	//attachInterrupt(16, sensorIRQHandler, CHANGE);
+}
 
+void checkMQTTConnection()
+{
 	/* Check if MQTT Connection is still alive */
 	if (mqtt.getConnectionState() != eTCS_Connected)
-			startMqttClient(); /* Auto reconnect */
-
-	//attachInterrupt(16, sensorIRQHandler, CHANGE);
+		startMqttClient(); /* Auto reconnect */
 }
 
 /* Index target for webserver */
@@ -413,6 +423,13 @@ void onPeriphConfig(HttpRequest &request, HttpResponse &response)
 		AppSettings.max7219_topic_charwidth = request.getPostParameter("max7219_char");
 		AppSettings.max7219_topic_intensity = request.getPostParameter("max7219_int");
 
+		/* Motion Sensor Settings */
+		AppSettings.motion = request.getPostParameter("motion").equals("on") ? true : false;
+		AppSettings.motion_invert = request.getPostParameter("motion_invert").equals("on") ? true : false;
+		AppSettings.motion_pin = request.getPostParameter("motion_pin").toInt();
+		AppSettings.motion_interval = request.getPostParameter("motion_interval").toInt();
+		AppSettings.motion_topic = request.getPostParameter("topic_motion");
+
 		debugf("Updating Peripheral settings");
 
 		/* Save peripheral config */
@@ -428,6 +445,15 @@ void onPeriphConfig(HttpRequest &request, HttpResponse &response)
 			if (AppSettings.adc) {
 				sensorPublishTimer.setIntervalMs(AppSettings.timer_delay);
 				sensorPublishTimer.start();
+			}
+		}
+
+		/* Set interval of motion sensing sensor check if timer was started before */
+		if (motionCheckTimer.isStarted()) {
+			motionCheckTimer.setIntervalMs(AppSettings.motion_interval);
+		} else {
+			if (AppSettings.motion) {
+				motionCheckTimer.initializeMs(AppSettings.motion_interval, motionSensorCheck).start();
 			}
 		}
 	}
@@ -471,6 +497,12 @@ void onPeriphConfig(HttpRequest &request, HttpResponse &response)
 	vars["max7219_speed"] = AppSettings.max7219_topic_speed;
 	vars["max7219_char"] = AppSettings.max7219_topic_charwidth;
 	vars["max7219_int"] = AppSettings.max7219_topic_intensity;
+
+	vars["motion_on"] = AppSettings.motion ? "checked='checked'" : "";
+	vars["motion_pin"] = AppSettings.motion_pin;
+	vars["motion_invert"] = AppSettings.motion_invert ? "checked='checked'" : "";
+	vars["topic_motion"] = AppSettings.motion_topic;
+	vars["motion_interval"] = AppSettings.motion_interval;
 
 	vars["lastedit"] = lastModified;
 
@@ -837,6 +869,14 @@ void connectOk(IPAddress ip, IPAddress mask, IPAddress gateway)
 	if (AppSettings.adc) {
 		sensorPublishTimer.initializeMs(AppSettings.timer_delay, sensorPublish).start();
 	}
+
+	if (AppSettings.motion) {
+		motionCheckTimer.initializeMs(AppSettings.motion_interval, motionSensorCheck).start();
+	}
+
+	/* Start timer which checks the connection to MQTT */
+	checkConnectionTimer.initializeMs(DEFAULT_CONNECT_CHECK_INTERVAL, checkMQTTConnection).start();
+
 	//stopAP(); TODO: When to stop AP? Or manually triggered in webinterface?
 }
 
@@ -852,6 +892,10 @@ void connectFail(String ssid, uint8_t ssidLength, uint8_t *bssid, uint8_t reason
 		debugf("Falling Back to Setup Mode");
 		/* Start Wifi Accesspoint */
 		startAP();
+	} else {
+		/* Try to reconnect */
+		debugf("Trying to reconnect to Wifi");
+		WifiStation.connect();
 	}
 }
 
@@ -935,9 +979,13 @@ void initNode()
 		startAP();
 	}
 
+	/* If a motion sensor is attached, enable the input gpio */
+	if (AppSettings.motion)
+		pinMode(AppSettings.motion_pin, INPUT_PULLUP);
+
 	/* If a relay attached and enabled in settings we init it here */
 	if (AppSettings.relay)
-		relay.init(AppSettings.relay_pin, AppSettings.relay_invert, false);
+		relay.init(AppSettings.relay_pin, AppSettings.relay_status_pin, AppSettings.relay_invert, false);
 
 	if (AppSettings.max7219) {
 		led.init(AppSettings.max7219_count, AppSettings.max7219_ss_pin);
@@ -948,6 +996,29 @@ void initNode()
 
 	/* Register onReady callback to run services on system ready */
 	System.onReady(startServers);
+}
+
+void motionSensorCheck()
+{
+	if (digitalRead(AppSettings.motion_pin) == AppSettings.motion_invert) {
+		if (motionState != true) {
+			motionState = true;
+			if (mqtt.getConnectionState() != eTCS_Connected) //TODO
+						startMqttClient(); // Auto reconnect
+			mqtt.publishWithQoS(AppSettings.motion_topic, "1", 1, true);
+			debugf("Motion ON (%s)", AppSettings.motion_topic.c_str());
+		}
+		//digitalWrite(14, 1);
+	} else {
+		if (motionState != false) {
+			motionState = false;
+			if (mqtt.getConnectionState() != eTCS_Connected) //TODO
+						startMqttClient(); // Auto reconnect
+			mqtt.publishWithQoS(AppSettings.motion_topic, "0", 1, true);
+			debugf("Motion OFF (%s)", AppSettings.motion_topic.c_str());
+		}
+		//digitalWrite(14, 0);
+	}
 }
 
 void init()
@@ -961,6 +1032,12 @@ void init()
 	//TODO: if debug disabled it get into bootloop, inspect stacktrace
 	/* Enable debug output to serial */
 	Serial.systemDebugOutput(true);
+
+	/*pinMode(12, INPUT_PULLUP);
+	pinMode(14, OUTPUT);
+
+	testTimer.initializeMs(10, blupp).start();
+	 */
 
 	/* Start initialization of ninHOME node */
 	initNode();

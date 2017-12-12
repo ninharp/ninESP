@@ -50,6 +50,7 @@ struct ApplicationSettingsStorage
 
 	bool relay = DEFAULT_RELAY;
 	int8_t relay_pin = DEFAULT_RELAY_PIN;
+	int8_t relay_status_pin = 12; //DEFAULT_RELAY_STATUS_PIN;
 	bool relay_invert = DEFAULT_RELAY_INVERT;
 	String relay_topic_cmd = DEFAULT_RELAY_TOPIC_CMD;
 	String relay_topic_cmd_old = "";
@@ -81,6 +82,12 @@ struct ApplicationSettingsStorage
 	String max7219_topic_charwidth = DEFAULT_MAX7219_TOPIC_CHARWIDTH;
 	String max7219_topic_intensity = DEFAULT_MAX7219_TOPIC_INTENSITY;
 	String max7219_topic_text = DEFAULT_MAX7219_TOPIC_TEXT;
+
+	bool motion = DEFAULT_MOTION_SENSOR;
+	int8_t motion_pin = DEFAULT_MOTION_PIN;
+	bool motion_invert = DEFAULT_MOTION_INVERT;
+	uint16_t motion_interval = DEFAULT_MOTION_INTERVAL;
+	String motion_topic = DEFAULT_MOTION_TOPIC;
 
 	void loadAll()
 	{
@@ -213,13 +220,17 @@ struct ApplicationSettingsStorage
 			}
 			/* uint8_t max7219_orientation = DEFAULT_MAX7219_ORIENTATION; */
 
-			delete[] jsonString;
-
-			debugf("rcswitch_topic = %s", rcswitch_topic_prefix.c_str());
-			debugf("rcswitch_count = %d", rcswitch_count);
-			for (int i = 0; i < rcswitch_count; i++) {
-				debugf("rcswitch_dev[%d] = %s-%s", i, rcswitch_dev[i][0].c_str(), rcswitch_dev[i][1].c_str());
+			/* Motion Sensor Settings */
+			if (periph.containsKey("motion")) {
+				JsonObject& jmotion = periph["motion"];
+				motion = jmotion["enabled"];
+				motion_invert = jmotion["inverted"];
+				motion_pin = String(jmotion["pin"].asString()).toInt();
+				motion_interval = String(jmotion["interval"].asString()).toInt();
+				motion_topic = jmotion["topic"].asString();
 			}
+
+			delete[] jsonString;
 		  }
 	}
 
@@ -284,6 +295,7 @@ struct ApplicationSettingsStorage
 		JsonObject& jrelay = jsonBuffer.createObject();
 		JsonObject& jadc = jsonBuffer.createObject();
 		JsonObject& jmax7219 = jsonBuffer.createObject();
+		JsonObject& jmotion = jsonBuffer.createObject();
 
 		root["peripherals"] = periph;
 
@@ -332,6 +344,12 @@ struct ApplicationSettingsStorage
 		jmax7219["topic_intensity"] = max7219_topic_intensity;
 		periph["max7219"] = jmax7219;
 
+		jmotion["enabled"] = motion;
+		jmotion["inverted"] = motion_invert;
+		jmotion["pin"] = motion_pin;
+		jmotion["interval"] = motion_interval;
+		jmotion["topic"] = motion_topic;
+		periph["motion"] = jmotion;
 
 		String rootString;
 		root.printTo(rootString);

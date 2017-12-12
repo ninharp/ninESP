@@ -60,7 +60,8 @@
 	                         	<input class="form-control" style="width: 100px" type="text" name="timer_delay" value="{timer_delay}"> 
 	                         ms
                         </div>
-                        <br/>
+                        <hr>
+                        
                     		<div class="form-group">
                 				 <div class="checkbox">
                 				 	<label>
@@ -99,7 +100,7 @@
                 				 	</label>
                 				 </div>
                         </div>
-                        <br/>
+                        <hr>
                         
                         <div class="form-group">
                 				 <div class="checkbox">
@@ -120,7 +121,7 @@
                              <label>Publish Topic ADC Value</label>
 	                          <input class="form-control" style="width: 250px" type="text" name="topic_adc_pub" value="{topic_adc}">
                         </div>
-                         <br/>
+                         <hr>
                          
                          <div class="form-group">
                 				 <div class="checkbox">
@@ -136,7 +137,32 @@
 	                          <br/>
 	                          <div class="rcdevices">{rcswitch_devs}</div>
                          </div>
-                         <br/>
+                         <hr>
+                         
+                         <div class="form-group">
+                				 <div class="checkbox">
+                				 	<label>
+                				 		<input type="checkbox" name="motion" {motion_on}>
+                				 		Motion Detection Device (i.e. HC-SR501)
+                				 	</label>
+                				 </div>
+                				  <label>Device Pin</label>
+	                          <input class="form-control" style="width: 50px" type="text" name="motion_pin" value="{motion_pin}">
+	                          <div class="checkbox col-md-offset-2">
+                				 	<label>
+                				 		<input type="checkbox" name="motion_invert" {motion_invert}>
+                				 		Inverted
+                				 	</label>
+                				 </div>
+                				 <label>Check Interval</label>
+	                         	<input class="form-control" style="width: 100px" type="text" name="motion_interval" value="{motion_interval}"> 
+	                         	ms
+                             <label>Publish Topic</label>
+	                          <input class="form-control" style="width: 250px" type="text" name="topic_motion" value="{topic_motion}">
+	                          <br/>
+                         </div>
+                         <hr>
+                         
                          <div class="form-group">
                 				 <div class="checkbox">
                 				 	<label>
