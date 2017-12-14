@@ -160,40 +160,33 @@ void onMQTTMessageReceived(String topic, String message)
 				}
 			}
 		}
-		/*
-		if (message.equals("on1")) {
-			rcSwitch.switchOn("11111", "00001");
-		}
-		else if (message.equals("on2")) {
-			rcSwitch.switchOn("11111", "00010");
-		}
-		else if (message.equals("on3")) {
-			rcSwitch.switchOn("11111", "00011");
-		}
-		else if (message.equals("on4")) {
-			rcSwitch.switchOn("11111", "00100");
-		}
-		else if (message.equals("on5")) {
-			rcSwitch.switchOn(2, 1);
-		}
-		else if (message.equals("off1")) {
-			rcSwitch.switchOff("11111", "00001");
-		}
-		else if (message.equals("off2")) {
-			rcSwitch.switchOff("11111", "00010");
-		}
-		else if (message.equals("off3")) {
-			rcSwitch.switchOff("11111", "00011");
-		}
-		else if (message.equals("off4")) {
-			rcSwitch.switchOff("11111", "00100");
-		}
-		else if (message.equals("off5")) {
-			rcSwitch.switchOff(2, 1);
-		}
-		*/
 	}
 	/* RCSwitch relay end */
+}
+
+String getStatusString() {
+	String status;
+	if (WifiAccessPoint.isEnabled())
+		status += "Access Point ";
+	if (WifiStation.isEnabled()) {
+		if (WifiAccessPoint.isEnabled())
+			status += "& ";
+		status += "Station ";
+	}
+	status += "Mode - ";
+	if (WifiStation.isEnabled() && WifiStation.isConnected()) {
+		IPAddress ip = WifiStation.getIP();
+		String ssid = WifiStation.getSSID();
+		status += "Connected to " + ssid + " with IP " + ip.toString();
+	}
+	if (WifiAccessPoint.isEnabled()) {
+		IPAddress ip = WifiAccessPoint.getIP();
+		String ssid = WifiAccessPoint.getSSID();
+		if (WifiStation.isEnabled())
+			status += " & ";
+		status += "Wifi AP '" + ssid + "' on IP " + ip.toString();
+	}
+	return status;
 }
 
 /* Timer callback function to publish values from attached sensors */
@@ -315,29 +308,8 @@ void onIndex(HttpRequest &request, HttpResponse &response)
 	auto &vars = tmpl->variables();
 	vars["lastedit"] = lastModified;
 
-	String status;
-	if (WifiAccessPoint.isEnabled())
-		status += "Access Point ";
-	if (WifiStation.isEnabled()) {
-		if (WifiAccessPoint.isEnabled())
-			status += "& ";
-		status += "Station ";
-	}
-	status += "Mode - ";
-	if (WifiStation.isEnabled() && WifiStation.isConnected()) {
-		IPAddress ip = WifiStation.getIP();
-		String ssid = WifiStation.getSSID();
-		status += "Connected to " + ssid + " with IP " + ip.toString();
-	}
-	if (WifiAccessPoint.isEnabled()) {
-		IPAddress ip = WifiAccessPoint.getIP();
-		String ssid = WifiAccessPoint.getSSID();
-		if (WifiStation.isEnabled())
-			status += " & ";
-		status += "Wifi AP '" + ssid + "' on IP " + ip.toString();
-	}
+	vars["status"] = getStatusString();
 
-	vars["status"] = status;
 	response.sendTemplate(tmpl); // will be automatically deleted
 }
 
@@ -401,6 +373,8 @@ void onConfig(HttpRequest &request, HttpResponse &response)
 	}
 
 	vars["lastedit"] = lastModified;
+
+	vars["status"] = getStatusString();
 
 	response.sendTemplate(tmpl); // will be automatically deleted
 }
@@ -529,6 +503,8 @@ void onPeriphConfig(HttpRequest &request, HttpResponse &response)
 
 	vars["lastedit"] = lastModified;
 
+	vars["status"] = getStatusString();
+
 	response.sendTemplate(tmpl); // will be automatically deleted
 }
 
@@ -567,6 +543,8 @@ void onMQTTConfig(HttpRequest &request, HttpResponse &response)
 	if (AppSettings.mqtt_topic_pub.length() <= 0) { vars["topic_pub"] = DEFAULT_MQTT_PUB; } else { vars["topic_pub"] = AppSettings.mqtt_topic_pub; }
 
 	vars["lastedit"] = lastModified;
+
+	vars["status"] = getStatusString();
 
 	response.sendTemplate(tmpl); // will be automatically deleted
 }
