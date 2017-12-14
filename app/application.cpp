@@ -314,16 +314,39 @@ void onIndex(HttpRequest &request, HttpResponse &response)
 	TemplateFileStream *tmpl = new TemplateFileStream("index.html");
 	auto &vars = tmpl->variables();
 	vars["lastedit"] = lastModified;
+
+	String status;
+	if (WifiAccessPoint.isEnabled())
+		status += "Access Point ";
+	if (WifiStation.isEnabled()) {
+		if (WifiAccessPoint.isEnabled())
+			status += "& ";
+		status += "Station ";
+	}
+	status += "Mode - ";
+	if (WifiStation.isEnabled() && WifiStation.isConnected()) {
+		IPAddress ip = WifiStation.getIP();
+		String ssid = WifiStation.getSSID();
+		status += "Connected to " + ssid + " with IP " + ip.toString();
+	}
+	if (WifiAccessPoint.isEnabled()) {
+		IPAddress ip = WifiAccessPoint.getIP();
+		String ssid = WifiAccessPoint.getSSID();
+		if (WifiStation.isEnabled())
+			status += " & ";
+		status += "Wifi AP '" + ssid + "' on IP " + ip.toString();
+	}
+
+	vars["status"] = status;
 	response.sendTemplate(tmpl); // will be automatically deleted
 }
 
 /* On Reboot target for webserver */
 void onReboot(HttpRequest &request, HttpResponse &response)
 {
-	//TODO: Restart trigger wont work */
 	debugf("Restarting...");
 	/* Disable Watchdog */
-	WDT.enable(true);
+	//WDT.enable(true);
 	/* Restart System */
 	System.restart();
 }
@@ -1003,7 +1026,7 @@ void motionSensorCheck()
 	if (digitalRead(AppSettings.motion_pin) == AppSettings.motion_invert) {
 		if (motionState != true) {
 			motionState = true;
-			if (mqtt.getConnectionState() != eTCS_Connected) //TODO
+			if (mqtt.getConnectionState() != eTCS_Connected) //TODO remove autoconnect cause of connCheck timer?
 						startMqttClient(); // Auto reconnect
 			mqtt.publishWithQoS(AppSettings.motion_topic, "1", 1, true);
 			debugf("Motion ON (%s)", AppSettings.motion_topic.c_str());
@@ -1012,7 +1035,7 @@ void motionSensorCheck()
 	} else {
 		if (motionState != false) {
 			motionState = false;
-			if (mqtt.getConnectionState() != eTCS_Connected) //TODO
+			if (mqtt.getConnectionState() != eTCS_Connected)
 						startMqttClient(); // Auto reconnect
 			mqtt.publishWithQoS(AppSettings.motion_topic, "0", 1, true);
 			debugf("Motion OFF (%s)", AppSettings.motion_topic.c_str());

@@ -5,21 +5,19 @@
 + Define UDP protocol
 + Add services settings vars
 + Change PIN setting in webinterface to dropdown
++ Implement log function which logs to specified topic and maybe a command to control loglevel. 
+  on the main command topic for example 
 
 + Define MQTT Topic Structure
 
 + Add more Peripheral "Modules"
-    + Add LED Control
-    + Add Motion Sensor
-    	+ PIR Sensor
 	+ Ultrasonic Sensor
-    + MAX7219 Matrix Output (already written)
     + other Display Outputs
 
 + Split source to different files and make it modular to specifiy different types of clients
   + Namespaces, Classes, ... default MQTT Structure
 
-+ Make project comments doxygen conform
++ Make project comments doxygen compatible
 
 
 
