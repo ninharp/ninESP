@@ -31,6 +31,7 @@ struct ApplicationSettingsStorage
 	bool udp = DEFAULT_UDP;
 	uint16_t udp_port = DEFAULT_UDP_PORT;
 
+	/* Status LED Config */
 	int8_t status_led_pin = -1;
 	bool status_led_inv = false;
 
@@ -45,9 +46,10 @@ struct ApplicationSettingsStorage
 	String mqtt_topic_cmd = DEFAULT_MQTT_CMD;
 	String mqtt_topic_pub = DEFAULT_MQTT_PUB;
 
-	/* Periph Config */
+	/* Sensor Timer Config */
 	uint16_t timer_delay = DEFAULT_SENSOR_TIMER_INTERVAL;
 
+	/* Relay Config */
 	bool relay = DEFAULT_RELAY;
 	int8_t relay_pin = DEFAULT_RELAY_PIN;
 	int8_t relay_status_pin = DEFAULT_RELAY_STATUS_PIN;
@@ -56,21 +58,27 @@ struct ApplicationSettingsStorage
 	String relay_topic_cmd = DEFAULT_RELAY_TOPIC_CMD;
 	String relay_topic_cmd_old = "";
 	String relay_topic_pub = DEFAULT_RELAY_TOPIC_PUB;
+
+	/* Key Input Config */
 	bool keyinput = DEFAULT_KEYINPUT;
 	bool keyinput_invert = DEFAULT_KEYINPUT_INVERT;
 	int8_t keyinput_pin = DEFAULT_KEYINPUT_PIN;
+	uint16_t keyinput_debounce = DEFAULT_KEYINPUT_DEBOUNCE_MS;
 
+	/* ADC Config */
 	bool adc = DEFAULT_ADC;
 	bool adc_pub = DEFAULT_ADC_PUBLISH;
 	String adc_topic = DEFAULT_ADC_TOPIC;
 
+	/* RCSwitch Config */
 	bool rcswitch = DEFAULT_RCSWITCH;
-	//TODO: Prefix for rcswitch
+	//TODO: Prefix for rcswitch in config
 	String rcswitch_topic_prefix = DEFAULT_RCSWITCH_TOPIC_PREFIX;
 	uint8_t rcswitch_count = 0;
 	int8_t rcswitch_pin = DEFAULT_RCSWITCH_PIN;
 	Vector<Vector <String>> rcswitch_dev;
 
+	/* MAX7219 Display Config */
 	bool max7219 = DEFAULT_MAX7219;
 	uint8_t max7219_count = DEFAULT_MAX7219_COUNT;
 	int8_t max7219_ss_pin = DEFAULT_MAX7219_SS_PIN;
@@ -84,6 +92,7 @@ struct ApplicationSettingsStorage
 	String max7219_topic_intensity = DEFAULT_MAX7219_TOPIC_INTENSITY;
 	String max7219_topic_text = DEFAULT_MAX7219_TOPIC_TEXT;
 
+	/* Motion Sensor Config */
 	bool motion = DEFAULT_MOTION_SENSOR;
 	int8_t motion_pin = DEFAULT_MOTION_PIN;
 	bool motion_invert = DEFAULT_MOTION_INVERT;
@@ -178,6 +187,7 @@ struct ApplicationSettingsStorage
 				keyinput = jrelay["keyinput"];
 				keyinput_invert = jrelay["keyinput_invert"];
 				keyinput_pin = String(jrelay["keyinput_pin"].asString()).toInt();
+				keyinput_debounce = String(jrelay["keyinput_debounce"].asString()).toInt();
 				relay_topic_pub = jrelay["topic_pub"].asString();
 				relay_topic_cmd = jrelay["topic_cmd"].asString();
 			}
@@ -318,6 +328,7 @@ struct ApplicationSettingsStorage
 		jrelay["keyinput"] = keyinput;
 		jrelay["keyinput_invert"] = keyinput_invert;
 		jrelay["keyinput_pin"] = keyinput_pin;
+		jrelay["keyinput_debounce"] = keyinput_debounce;
 		jrelay["topic_pub"] = relay_topic_pub;
 		jrelay["topic_cmd"] = relay_topic_cmd;
 		periph["relay"] = jrelay;

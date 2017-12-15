@@ -37,7 +37,7 @@
 /* Key debouncing intervall (100ms) */
 #define DEFAULT_KEYINPUT false
 #define DEFAULT_KEYINPUT_PIN 5 //D1
-#define DEFAULT_KEY_POLL_INTERVAL 100
+#define DEFAULT_KEYINPUT_DEBOUNCE_MS 500
 #define DEFAULT_KEYINPUT_INVERT false
 
 /* Default Sensor Timer Interval (30sec) */

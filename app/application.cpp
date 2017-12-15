@@ -381,6 +381,7 @@ void onPeriphConfig(HttpRequest &request, HttpResponse &response)
 		AppSettings.keyinput = request.getPostParameter("keyinput").equals("on") ? true : false;
 		AppSettings.keyinput_invert = request.getPostParameter("keyinput_invert").equals("on") ? true : false;
 		AppSettings.keyinput_pin = String(request.getPostParameter("keyinput_pin")).toInt();
+		AppSettings.keyinput_debounce = String(request.getPostParameter("keyinput_debounce")).toInt();
 
 		/* ADC Settings */
 		AppSettings.adc = request.getPostParameter("adc").equals("on") ? true : false;
@@ -457,6 +458,7 @@ void onPeriphConfig(HttpRequest &request, HttpResponse &response)
 	vars["topic_relay_pub"] = AppSettings.relay_topic_pub;
 	vars["keyinput_on"] = AppSettings.keyinput ? "checked='checked'" : "";
 	vars["keyinput_pin"] = AppSettings.keyinput_pin;
+	vars["key_debounce"] = AppSettings.keyinput_debounce;
 	vars["keyinput_invert"] = AppSettings.keyinput_invert ? "checked='checked'" : "";
 
 	/* ADC Settings */

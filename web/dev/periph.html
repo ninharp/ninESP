@@ -96,7 +96,7 @@
 	                         <div class="checkbox col-md-offset-1">
                 				 	<label>
                 				 		<input type="checkbox" name="keyinput" {keyinput_on}>
-                				 		Switch by Hardware Key
+                				 		Switch Relay by Hardware Key
                 				 	</label>
                 				 </div>
                 				 <div class="col-md-offset-1">
@@ -108,6 +108,10 @@
                 				 		<input type="checkbox" name="keyinput_invert" {keyinput_invert}>
                 				 		Active Low
                 				 	</label>
+                				 </div>
+                				 <div class="col-md-offset-1">
+                				 	<label>Debounce Timeout in ms</label>
+                				 	<input class="form-control" style="width: 100px" type="text" name="keyinput_debounce" value="{key_debounce}">
                 				 </div>
                         </div>
                         <hr>
