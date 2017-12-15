@@ -75,35 +75,6 @@ void onReceiveUDP(UdpConnection& connection, char *data, int size, IPAddress rem
 {
 	debugf("UDP Sever callback from %s:%d, %d bytes", remoteIP.toString().c_str(), remotePort, size);
 
-	/* Debug for RCSwitch */
-	String d1,d2;
-	String d = String(data);
-	if ((d.charAt(0) == 'S' || d.charAt(0) == 'O' ) && d.length() == 12) {
-		for (uint8_t i = 1; i <= 5; i++) {
-			d1 += d.charAt(i);
-			d2 += d.charAt(i+5);
-		}
-		if (d.charAt(0) == 'S') {
-			rcSwitch.switchOn(d1.c_str(), d2.c_str());
-			debugf("ON D1 = %s | D2 = %s", d1.c_str(), d2.c_str());
-		} else if (d.charAt(0) == 'O') {
-			rcSwitch.switchOff(d1.c_str(), d2.c_str());
-			debugf("OFF D1 = %s | D2 = %s", d1.c_str(), d2.c_str());
-		}
-	} else if ((d.charAt(0) == 'P') && d.length() == 3) {
-		String protocol = String(d.charAt(1));
-		debugf("Set Protocol %s", protocol.c_str());
-		rcSwitch.setProtocol(protocol.toInt());
-	} else if ((d.charAt(0) == 'L')) {
-		String pulselength;
-		for (uint8_t i = 1; i < d.length(); i++) {
-			pulselength += d.charAt(i);
-		}
-		debugf("Set Pulselength %s", pulselength.c_str());
-		rcSwitch.setPulseLength(pulselength.toInt());
-	}
-	/* Debug RCSwitch End */
-
 	// Send echo to remote sender
 	String text = String("echo: ") + data;
 	udp.sendStringTo(remoteIP, remotePort, text);
@@ -887,16 +858,23 @@ void connectFail(String ssid, uint8_t ssidLength, uint8_t *bssid, uint8_t reason
 	/* The different reason codes can be found in user_interface.h. in your SDK. */
 	debugf("Disconnected from %s. Reason: %d", ssid.c_str(), reason);
 	/* If wifi disconnect reason was authentication failed then assume wrong password and start wifi accesspoint again */
-	if (reason >= 200) {//|| reason == 2) {
+	//if (reason >= 200) {//|| reason == 2) {
 		/* Disconnect wifistation, dont know if necessary */
-		WifiStation.disconnect();
-		debugf("Falling Back to Setup Mode");
+	//	WifiStation.disconnect();
+	//	debugf("Falling Back to Setup Mode");
 		/* Start Wifi Accesspoint */
-		startAP();
-	} else {
+	//	startAP();
+	//} else {
 		/* Try to reconnect */
-		debugf("Trying to reconnect to Wifi");
-		WifiStation.connect();
+	//	debugf("Trying to reconnect to Wifi");
+	//	WifiStation.connect();
+	//}
+
+	if (AppSettings.existGlobal()) {
+		if (ssid.equals(AppSettings.ssid)) {
+			debugf("Wifi Disconnected! Trying to reconnect...");
+			WifiStation.connect();
+		}
 	}
 }
 
