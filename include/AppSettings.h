@@ -9,6 +9,7 @@
  */
 
 #include <SmingCore/SmingCore.h>
+#include <app_defaults.h>
 
 #ifndef INCLUDE_APPSETTINGS_H_
 #define INCLUDE_APPSETTINGS_H_

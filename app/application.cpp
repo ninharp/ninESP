@@ -1,11 +1,11 @@
 #include <user_config.h>
-#include <app_config.h>
 #include <SmingCore/SmingCore.h>
 #include <AppSettings.h>
 #include <Libraries/RCSwitch/RCSwitch.h>
 #include <RelaySwitch.h>
 #include <ninMQTTClient.h>
 #include <LedMatrix.h>
+#include <app_defaults.h>
 
 //#define printf_P_stack
 

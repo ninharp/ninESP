@@ -9,8 +9,8 @@
  */
 
 
-#ifndef INCLUDE_APP_CONFIG_H_
-#define INCLUDE_APP_CONFIG_H_
+#ifndef INCLUDE_APP_DEFAULTS_H_
+#define INCLUDE_APP_DEFAULTS_H_
 
 /* Default Wifi Accesspoint Name for Setup */
 #define NINHOME_AP_NAME "ninHome Configuration"
@@ -94,4 +94,4 @@
 #define DEFAULT_MAX7219_TOPIC_TEXT "text"
 #define DEFAULT_MAX7219_TOPIC_INTENSITY "intensity"
 
-#endif /* INCLUDE_APP_CONFIG_H_ */
+#endif /* INCLUDE_APP_DEFAULTS_H_ */
