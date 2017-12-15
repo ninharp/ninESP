@@ -39,7 +39,7 @@ void RelaySwitch::set(bool state)
 {
 	if (state) {
 		debugf("Relay ON");
-		state = true;
+		this->state = true;
 		if (inverted)
 			digitalWrite(pin, 0);
 		else
@@ -50,7 +50,7 @@ void RelaySwitch::set(bool state)
 		}
 	} else {
 		debugf("Relay OFF");
-		state = false;
+		this->state = false;
 		if (inverted)
 			digitalWrite(pin, 1);
 		else

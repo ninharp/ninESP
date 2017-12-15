@@ -58,17 +58,29 @@ Timer checkConnectionTimer;
 Timer motionCheckTimer;
 bool motionState = false;
 
-/* IRQ Callback for interrupt of key input
+Timer debounceTimer;
+bool key_pressed = false;
+long lastKeyPress = 0;
+
+/* IRQ Callback for interrupt of key input */
 void IRAM_ATTR keyIRQHandler()
 {
-	if (AppSettings.relay) {
-		relay.toggle();
-		if (mqtt.getConnectionState() != eTCS_Connected) //TODO
-			startMqttClient(); // Auto reconnect
-		mqtt.publish(AppSettings.relay_topic_pub, String(relay.get()), true);
+	if (AppSettings.relay && AppSettings.keyinput) {
+		noInterrupts();
+		if (AppSettings.keyinput_invert) {
+			if (digitalRead(AppSettings.keyinput_pin) == LOW)
+				key_pressed = true;
+			else
+				key_pressed = false;
+		} else {
+			if (digitalRead(AppSettings.keyinput_pin) == HIGH)
+				key_pressed = true;
+			else
+				key_pressed = false;
+		}
+		//interrupts();
 	}
 }
-*/
 
 /* Callback for UDP Receiving */
 void onReceiveUDP(UdpConnection& connection, char *data, int size, IPAddress remoteIP, uint16_t remotePort)
@@ -364,7 +376,7 @@ void onPeriphConfig(HttpRequest &request, HttpResponse &response)
 		AppSettings.relay_invert = request.getPostParameter("relay_invert").equals("on") ? true : false;
 		AppSettings.relay_topic_pub = request.getPostParameter("topic_relay_pub");
 		AppSettings.relay_topic_cmd = request.getPostParameter("topic_relay_cmd");
-		AppSettings.keyinput = request.getPostParameter("keyinput_on").equals("on") ? true : false;
+		AppSettings.keyinput = request.getPostParameter("keyinput").equals("on") ? true : false;
 		AppSettings.keyinput_invert = request.getPostParameter("keyinput_invert").equals("on") ? true : false;
 		AppSettings.keyinput_pin = String(request.getPostParameter("keyinput_pin")).toInt();
 
@@ -794,6 +806,36 @@ void stopAP()
 	//stopmDNS();
 }
 
+void debounceKey()
+{
+	if (key_pressed && (millis() - lastKeyPress) >= 1500) { // check if key is pressed and last key press is ddd milliseconds away (need config value)
+		/* Recheck if key is still set */
+		if (AppSettings.keyinput_invert) {
+			if (digitalRead(AppSettings.keyinput_pin) == LOW)
+				key_pressed = true;
+			else
+				key_pressed = false;
+		} else {
+			if (digitalRead(AppSettings.keyinput_pin) == HIGH)
+				key_pressed = true;
+			else
+				key_pressed = false;
+		}
+
+		/* if key is pressed */
+		if (key_pressed) {
+			relay.set(!relay.get()); // toggle relay
+			if (mqtt.getConnectionState() != eTCS_Connected) //TODO
+				startMqttClient(); // Auto reconnect
+			mqtt.publish(AppSettings.relay_topic_pub, String(relay.get()), true); // send actual state to broker
+			lastKeyPress = millis(); // reset last key press millis
+			key_pressed = false; // reset key_pressed value
+			interrupts(); // re-enable the interrupts
+		}
+
+	}
+}
+
 /* Callback when wifi network scan is finished */
 void networkScanCompleted(bool succeeded, BssList list)
 {
@@ -844,6 +886,10 @@ void connectOk(IPAddress ip, IPAddress mask, IPAddress gateway)
 
 	if (AppSettings.motion) {
 		motionCheckTimer.initializeMs(AppSettings.motion_interval, motionSensorCheck).start();
+	}
+
+	if (AppSettings.relay && AppSettings.keyinput) {
+		debounceTimer.initializeMs(100, debounceKey).start();
 	}
 
 	/* Start timer which checks the connection to MQTT */
@@ -960,11 +1006,22 @@ void initNode()
 
 	/* If a motion sensor is attached, enable the input gpio */
 	if (AppSettings.motion)
-		pinMode(AppSettings.motion_pin, INPUT_PULLUP);
+		pinMode(AppSettings.motion_pin, INPUT_PULLUP); /* config setting for pullup required? */
 
 	/* If a relay attached and enabled in settings we init it here */
-	if (AppSettings.relay)
+	if (AppSettings.relay) {
 		relay.init(AppSettings.relay_pin, AppSettings.relay_status_pin, AppSettings.relay_invert, false);
+		if (AppSettings.keyinput) {
+			if (AppSettings.keyinput_pin > -1) {
+				pinMode(AppSettings.keyinput_pin, INPUT);/* config setting for pullup required? */
+				debugf("Relay->Keyinput activated for pin %d. Attaching IRQ", AppSettings.keyinput_pin);
+				if (AppSettings.keyinput_invert)
+					attachInterrupt(AppSettings.keyinput_pin, keyIRQHandler, FALLING);
+				else
+					attachInterrupt(AppSettings.keyinput_pin, keyIRQHandler, RISING);
+			}
+		}
+	}
 
 	if (AppSettings.max7219) {
 		led.init(AppSettings.max7219_count, AppSettings.max7219_ss_pin);

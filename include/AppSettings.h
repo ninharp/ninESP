@@ -50,7 +50,7 @@ struct ApplicationSettingsStorage
 
 	bool relay = DEFAULT_RELAY;
 	int8_t relay_pin = DEFAULT_RELAY_PIN;
-	int8_t relay_status_pin = 12; //DEFAULT_RELAY_STATUS_PIN;
+	int8_t relay_status_pin = DEFAULT_RELAY_STATUS_PIN;
 	bool relay_invert = DEFAULT_RELAY_INVERT;
 	String relay_topic_cmd = DEFAULT_RELAY_TOPIC_CMD;
 	String relay_topic_cmd_old = "";
@@ -172,8 +172,8 @@ struct ApplicationSettingsStorage
 			relay_pin = String(jrelay["pin"].asString()).toInt();
 			relay_invert = jrelay["inverted"];
 			keyinput = jrelay["keyinput"];
-			keyinput_invert = jrelay["invert"];
-			keyinput_pin = String(jrelay["pin"].asString()).toInt();
+			keyinput_invert = jrelay["keyinput_invert"];
+			keyinput_pin = String(jrelay["keyinput_pin"].asString()).toInt();
 			relay_topic_pub = jrelay["topic_pub"].asString();
 			relay_topic_cmd = jrelay["topic_cmd"].asString();
 
