@@ -6,7 +6,9 @@
 + Add services settings vars
 + Change PIN setting in webinterface to dropdown
 + Implement log function which logs to specified topic and maybe a command to control loglevel. 
-  on the main command topic for example 
+  on the main command topic for example
+  
+ + MAX7219 lacks a configuration for orientation 
 
 + Define MQTT Topic Structure
 

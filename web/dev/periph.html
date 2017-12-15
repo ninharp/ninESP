@@ -76,7 +76,17 @@
                 				 <div class="checkbox col-md-offset-2">
                 				 	<label>
                 				 		<input type="checkbox" name="relay_invert" {relay_invert}>
-                				 		Inverted
+                				 		Active Low
+                				 	</label>
+                				 </div>
+                				 <div class="col-md-offset-1">
+                				 	<label>Status Pin (-1 to disable)</label>
+                				 	<input class="form-control" style="width: 50px" type="text" name="status_pin" value="{status_pin}">
+                				 </div>
+                				 <div class="checkbox col-md-offset-2">
+                				 	<label>
+                				 		<input type="checkbox" name="status_invert" {status_invert}>
+                				 		Active Low
                 				 	</label>
                 				 </div>
                             <label>Switch Command Topic</label>

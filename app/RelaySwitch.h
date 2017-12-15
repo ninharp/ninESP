@@ -16,7 +16,7 @@ public:
 	void set(bool state);
 	void toggle(void);
 	bool get(void);
-	void init(int8_t pin, int8_t status_pin, bool inverted, bool defState);
+	void init(int8_t pin, int8_t status_pin, bool inverted, bool status_inverted, bool defState);
 
 protected:
 	bool state;
@@ -24,6 +24,7 @@ protected:
 private:
 	int8_t pin;
 	int8_t status_pin;
+	bool status_inverted;
 };
 
 #endif /* APP_RELAYSWITCH_H_ */

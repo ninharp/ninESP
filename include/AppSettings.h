@@ -51,6 +51,7 @@ struct ApplicationSettingsStorage
 	bool relay = DEFAULT_RELAY;
 	int8_t relay_pin = DEFAULT_RELAY_PIN;
 	int8_t relay_status_pin = DEFAULT_RELAY_STATUS_PIN;
+	bool relay_status_invert = DEFAULT_RELAY_STATUS_INVERT;
 	bool relay_invert = DEFAULT_RELAY_INVERT;
 	String relay_topic_cmd = DEFAULT_RELAY_TOPIC_CMD;
 	String relay_topic_cmd_old = "";
@@ -161,46 +162,54 @@ struct ApplicationSettingsStorage
 			char* jsonString = new char[size + 1];
 			fileGetContent(APP_PERIPH_SETTINGS_FILE, jsonString, size + 1);
 			JsonObject& root = jsonBuffer.parseObject(jsonString);
-
 			JsonObject& periph = root["peripherals"];
 
+			/* Timer delay setting */
 			timer_delay = String(periph["timer_delay"].asString()).toInt();
 
 			/* Relay Settings */
-			JsonObject& jrelay = periph["relay"];
-			relay = jrelay["enabled"];
-			relay_pin = String(jrelay["pin"].asString()).toInt();
-			relay_invert = jrelay["inverted"];
-			keyinput = jrelay["keyinput"];
-			keyinput_invert = jrelay["keyinput_invert"];
-			keyinput_pin = String(jrelay["keyinput_pin"].asString()).toInt();
-			relay_topic_pub = jrelay["topic_pub"].asString();
-			relay_topic_cmd = jrelay["topic_cmd"].asString();
+			if (periph.containsKey("relay")) {
+				JsonObject& jrelay = periph["relay"];
+				relay = jrelay["enabled"];
+				relay_pin = String(jrelay["pin"].asString()).toInt();
+				relay_invert = jrelay["inverted"];
+				relay_status_pin = String(jrelay["status_pin"].asString()).toInt();
+				relay_status_invert = jrelay["status_invert"];
+				keyinput = jrelay["keyinput"];
+				keyinput_invert = jrelay["keyinput_invert"];
+				keyinput_pin = String(jrelay["keyinput_pin"].asString()).toInt();
+				relay_topic_pub = jrelay["topic_pub"].asString();
+				relay_topic_cmd = jrelay["topic_cmd"].asString();
+			}
 
 			/* ADC Settings */
-			JsonObject& jadc = periph["adc"];
-			adc = jadc["enabled"];
-			adc_pub = jadc["publish"];
-			adc_topic = jadc["topic"].asString();
+			if (periph.containsKey("adc")) {
+				JsonObject& jadc = periph["adc"];
+				adc = jadc["enabled"];
+				adc_pub = jadc["publish"];
+				adc_topic = jadc["topic"].asString();
+			}
 
 			/* RCSwitch Settings */
-			JsonObject& rcs = periph["rcswitch"];
-			rcswitch = rcs["enabled"];
-			rcswitch_topic_prefix = rcs["topic"].asString();
-			String tmp = rcs["count"].asString();
-			if (tmp.length() >= 1)
-				rcswitch_count = tmp.toInt();
+			if (periph.containsKey("rcswitch")) {
+				JsonObject& rcs = periph["rcswitch"];
+				rcswitch = rcs["enabled"];
+				rcswitch_topic_prefix = rcs["topic"].asString();
+				String tmp = rcs["count"].asString();
+				if (tmp.length() >= 1)
+					rcswitch_count = tmp.toInt();
 
-			if (rcswitch_count > 0) {
-				JsonObject& rcdev = rcs["devices"];
-				for (int i = 0; i < rcswitch_count; i++) {
-					JsonObject& rcdev_item = rcdev[String(i)];
-					Vector<String> item;
-					item.addElement(rcdev_item["0"].asString());
-					item.addElement(rcdev_item["1"].asString());
-					rcswitch_dev.add(item);
-					//rcswitch_dev[i][0] = rcdev_item["0"].asString();
-					//rcswitch_dev[i][1] = rcdev_item["1"].asString();
+				if (rcswitch_count > 0) {
+					JsonObject& rcdev = rcs["devices"];
+					for (int i = 0; i < rcswitch_count; i++) {
+						JsonObject& rcdev_item = rcdev[String(i)];
+						Vector<String> item;
+						item.addElement(rcdev_item["0"].asString());
+						item.addElement(rcdev_item["1"].asString());
+						rcswitch_dev.add(item);
+						//rcswitch_dev[i][0] = rcdev_item["0"].asString();
+						//rcswitch_dev[i][1] = rcdev_item["1"].asString();
+					}
 				}
 			}
 
@@ -304,6 +313,8 @@ struct ApplicationSettingsStorage
 		jrelay["enabled"] = relay;
 		jrelay["pin"] = relay_pin;
 		jrelay["inverted"] = relay_invert;
+		jrelay["status_pin"] = relay_status_pin;
+		jrelay["status_invert"] = relay_status_invert;
 		jrelay["keyinput"] = keyinput;
 		jrelay["keyinput_invert"] = keyinput_invert;
 		jrelay["keyinput_pin"] = keyinput_pin;

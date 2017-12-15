@@ -30,6 +30,7 @@
 #define DEFAULT_RELAY_PIN 14 //D5
 #define DEFAULT_RELAY_INVERT false
 #define DEFAULT_RELAY_STATUS_PIN -1
+#define DEFAULT_RELAY_STATUS_INVERT false
 #define DEFAULT_RELAY_TOPIC_CMD "client/relay"
 #define DEFAULT_RELAY_TOPIC_PUB "client/relaystate"
 

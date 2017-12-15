@@ -374,6 +374,8 @@ void onPeriphConfig(HttpRequest &request, HttpResponse &response)
 		AppSettings.relay = request.getPostParameter("relay").equals("on") ? true : false;
 		AppSettings.relay_pin = String(request.getPostParameter("relay_pin")).toInt();
 		AppSettings.relay_invert = request.getPostParameter("relay_invert").equals("on") ? true : false;
+		AppSettings.relay_status_pin = String(request.getPostParameter("status_pin")).toInt();
+		AppSettings.relay_status_invert = request.getPostParameter("status_invert").equals("on") ? true : false;
 		AppSettings.relay_topic_pub = request.getPostParameter("topic_relay_pub");
 		AppSettings.relay_topic_cmd = request.getPostParameter("topic_relay_cmd");
 		AppSettings.keyinput = request.getPostParameter("keyinput").equals("on") ? true : false;
@@ -449,6 +451,8 @@ void onPeriphConfig(HttpRequest &request, HttpResponse &response)
 	vars["relay_on"] = AppSettings.relay ? "checked='checked'" : "";
 	vars["relay_pin"] = AppSettings.relay_pin;
 	vars["relay_invert"] = AppSettings.relay_invert ? "checked='checked'" : "";
+	vars["status_pin"] = AppSettings.relay_status_pin;
+	vars["status_invert"] = AppSettings.relay_status_invert ? "checked='checked'" : "";
 	vars["topic_relay_cmd"] = AppSettings.relay_topic_cmd;
 	vars["topic_relay_pub"] = AppSettings.relay_topic_pub;
 	vars["keyinput_on"] = AppSettings.keyinput ? "checked='checked'" : "";
@@ -808,7 +812,7 @@ void stopAP()
 
 void debounceKey()
 {
-	if (key_pressed && (millis() - lastKeyPress) >= 1500) { // check if key is pressed and last key press is ddd milliseconds away (need config value)
+	if (key_pressed && (millis() - lastKeyPress) >= 500) { // check if key is pressed and last key press is ddd milliseconds away (need config value)
 		/* Recheck if key is still set */
 		if (AppSettings.keyinput_invert) {
 			if (digitalRead(AppSettings.keyinput_pin) == LOW)
@@ -1010,7 +1014,7 @@ void initNode()
 
 	/* If a relay attached and enabled in settings we init it here */
 	if (AppSettings.relay) {
-		relay.init(AppSettings.relay_pin, AppSettings.relay_status_pin, AppSettings.relay_invert, false);
+		relay.init(AppSettings.relay_pin, AppSettings.relay_status_pin, AppSettings.relay_invert, AppSettings.relay_status_invert, false);
 		if (AppSettings.keyinput) {
 			if (AppSettings.keyinput_pin > -1) {
 				pinMode(AppSettings.keyinput_pin, INPUT);/* config setting for pullup required? */
