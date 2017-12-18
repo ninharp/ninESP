@@ -21,6 +21,8 @@ String network, password;
 /* Last modified string for webinterface */
 String lastModified;
 
+String app_version = String(VER_MAJOR) + "." +String(VER_MINOR) + " build " + String(VER_BUILD);
+
 /* Forward declarations */
 void startMqttClient();
 void onMQTTMessageReceived(String topic, String message);
@@ -270,7 +272,7 @@ void startMqttClient()
 	//if (mqtt.isEnabled()) { // if WifiStation.isConnected() .... TODO
 		mqtt.setEnabled(true); //TODO
 		/* Set LWT message and topic */
-		if(!mqtt.setWill(AppSettings.mqtt_topic_lwt, WifiStation.getIP().toString(), 2, true)) {
+		if(!mqtt.setWill(AppSettings.mqtt_topic_lwt, AppSettings.mqtt_userid+"/"+WifiStation.getIP().toString(), 2, true)) {
 			debugf("Unable to set the last will and testament. Most probably there is not enough memory on the device.");
 		}
 
@@ -354,6 +356,7 @@ void onIndex(HttpRequest &request, HttpResponse &response)
 	vars["lastedit"] = lastModified;
 
 	vars["status"] = getStatusString();
+	vars["version"] = app_version;
 
 	response.sendTemplate(tmpl); // will be automatically deleted
 }
@@ -420,6 +423,7 @@ void onConfig(HttpRequest &request, HttpResponse &response)
 	vars["lastedit"] = lastModified;
 
 	vars["status"] = getStatusString();
+	vars["version"] = app_version;
 
 	response.sendTemplate(tmpl); // will be automatically deleted
 }
@@ -555,6 +559,7 @@ void onPeriphConfig(HttpRequest &request, HttpResponse &response)
 	vars["lastedit"] = lastModified;
 
 	vars["status"] = getStatusString();
+	vars["version"] = app_version;
 
 	response.sendTemplate(tmpl); // will be automatically deleted
 }
@@ -596,6 +601,7 @@ void onMQTTConfig(HttpRequest &request, HttpResponse &response)
 	vars["lastedit"] = lastModified;
 
 	vars["status"] = getStatusString();
+	vars["version"] = app_version;
 
 	response.sendTemplate(tmpl); // will be automatically deleted
 }

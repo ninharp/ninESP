@@ -12,7 +12,7 @@
 #ifndef INCLUDE_APP_DEFAULTS_H_
 #define INCLUDE_APP_DEFAULTS_H_
 
-#define VER_BUILD		2
+#define VER_BUILD		11
 #define VER_MINOR		1
 #define VER_MAJOR		0
 
