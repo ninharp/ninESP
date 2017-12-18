@@ -1,9 +1,7 @@
 + Reset after change/set Network (automatically or triggered from webinterface)
-+ More Settings in AJAX Web, structure!?
 + Error checking in ajax web
 + Display of current settings and states (debug function already implemented [/dumpcfg])
 + Define UDP protocol
-+ Add services settings vars
 + Change PIN setting in webinterface to dropdown
 + Implement log function which logs to specified topic and maybe a command to control loglevel. 
   on the main command topic for example
@@ -26,5 +24,5 @@
 ISSUES
 ######
 
-Split setting disabling on settings.html (javascript)
+Split setting disabling on settings.html, periph.html, ... (javascript)
 

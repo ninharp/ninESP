@@ -9,13 +9,14 @@ EXTRA_INCDIR = include
 ESP_HOME = /opt/esp-open-sdk
 
 ## SMING_HOME sets the path where Sming framework is located.
-SMING_HOME = Sming/Sming
+SMING_HOME = /opt/Sming/Sming
 
 ## COM port parameter is reqruied to flash firmware correctly.
 COM_PORT = /dev/ttyUSB0
 
 ## Com port speed
 COM_SPEED	= 230400
+#COM_SPEED = 115200
 COM_SPEED_SERIAL	= 115200
 
 ## Configure flash parameters (for ESP12-E and other new boards):

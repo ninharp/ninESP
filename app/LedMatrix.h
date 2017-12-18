@@ -21,169 +21,125 @@
 #define TEXT_ALIGN_RIGHT         2 // End of text is aligned to the right of the display
 #define TEXT_ALIGN_RIGHT_END     3 // End of text is just outside the left side of the display
 
-#define VERTICAL 1
-#define HORIZONTAL 2
-
 class LedMatrix {
-    
+
 public:
-    
-    /**
-     * Constructor.
-     * numberOfDisplays: number of connected devices
-     * slaveSelectPin: CS (or SS) pin connected to your ESP8266
-     */
-    LedMatrix(byte numberOfDisplays, byte slaveSelectPin);
-    
-    /**
-     * Initializes the SPI interface
-     */
-    void init(uint8_t numDevices, int8_t sspin);
-    
-    /**
-     * Sets the intensity on all devices.
-     * intensity: 0-15
-     */
-    void setIntensity(byte intensity);
-    
-    /**
-     * Sets the width in pixels for one character.
-     * Default is 7.
-     */
-    void setCharWidth(byte charWidth);
-    
-    /**
-     * Sets the text alignment.
-     * Default is TEXT_ALIGN_LEFT_END.
-     *
-     */
-    void setTextAlignment(byte textAlignment);
-    
-    /**
-     * Send a byte to a specific device.
-     */
-    void sendByte (const byte device, const byte reg, const byte data);
-    
-    /**
-     * Send a byte to all devices (convenience method).
-     */
-    void sendByte (const byte reg, const byte data);
-    
-    /**
-     * Turn on pixel at position (x,y).
-     */
-    void setPixel(byte x, byte y);
-    
-    /**
-     * Clear the frame buffer.
-     */
-    void clear();
-    
-    /**
-     * Draw the currently set text at the current offset.
-     */
-    void drawText();
-    
-    /**
-     * Set the current text.
-     */
-    void setText(String text);
-    
-    /**
-     * Set the text that will replace the current text after a complete scroll
-     * cycle.
-     */
-    void setNextText(String nextText);
-    
-    /**
-     * Set a specific column with a byte value to the framebuffer.
-     */
-    void setColumn(int column, byte value);
-    
-    /**
-     * Writes the framebuffer to the displays.
-     */
-    void commit();
-    
-    /**
-     * Scroll the text to the right.
-     */
-    void scrollTextRight();
-    
-    /**
-     * Scroll the text to the left.
-     */
-    void scrollTextLeft();
-    
-    /**
-     * Oscilate the text between the two limits.
-     */
-    void oscillateText();
-    
-    /**
-	 * Sets the device orientation to appropriate value
-	 * Set it to VERTICAL if using devices daisy chained in verticle positions
-	 * examples of such devices include 1x4 8x8 module
-	 */
-	void setDeviceOrientation(byte value);
 
-	uint8_t getCharWidth();
+/**
+ * Constructor.
+ * numberOfDisplays: number of connected devices
+ * slaveSelectPin: CS (or SS) pin connected to your ESP8266
+ */
+LedMatrix(byte numberOfDisplays, byte slaveSelectPin);
 
-	byte getDeviceOrientation() const {
-		return deviceOrientation;
-	}
+/**
+ * Initializes the SPI interface
+ */
+void init(uint8_t num, int8_t pin);
 
-	uint8_t getEnabled() const {
-		return enabled;
-	}
+/**
+ * Sets the intensity on all devices.
+ * intensity: 0-15
+ */
+void setIntensity(byte intensity);
 
-	void setEnabled(uint8_t enabled = true) {
-		this->enabled = enabled;
-	}
+/**
+ * Sets the width in pixels for one character.
+ * Default is 7.
+ */
+void setCharWidth(byte charWidth);
 
-	bool isOscillating() const {
-		return oscillating;
-	}
+uint8_t getCharWidth(void);
 
-	void setOscillating(bool oscillating = false) {
-		this->oscillating = oscillating;
-	}
+/**
+ * Sets the text alignment.
+ * Default is TEXT_ALIGN_LEFT_END.
+ *
+ */
+void setTextAlignment(byte textAlignment);
 
-	bool isScrolling() const {
-		return scrolling;
-	}
+/**
+ * Send a byte to a specific device.
+ */
+void sendByte (const byte device, const byte reg, const byte data);
 
-	void setScrolling(bool scrolling = false) {
-		this->scrolling = scrolling;
-	}
+/**
+ * Send a byte to all devices (convenience method).
+ */
+void sendByte (const byte reg, const byte data);
 
-	uint8_t getScrollspeed() const {
-		return scrollspeed;
-	}
+/**
+ * Turn on pixel at position (x,y).
+ */
+void setPixel(byte x, byte y);
 
-	void setScrollspeed(uint8_t scrollspeed = 50) {
-		this->scrollspeed = scrollspeed;
-	}
+/**
+ * Clear the frame buffer.
+ */
+void clear();
+
+/**
+ * Draw the currently set text at the current offset.
+ */
+void drawText();
+
+/**
+ * Set the current text.
+ */
+void setText(String text);
+
+/**
+ * Set the text that will replace the current text after a complete scroll
+ * cycle.
+ */
+void setNextText(String nextText);
+
+/**
+ * Set a specific column with a byte value to the framebuffer.
+ */
+void setColumn(int column, byte value);
+
+/**
+ * Writes the framebuffer to the displays.
+ */
+void commit();
+
+/**
+ * Scroll the text to the right.
+ */
+void scrollTextRight();
+
+/**
+ * Scroll the text to the left.
+ */
+void scrollTextLeft();
+
+/**
+ * Oscilate the text between the two limits.
+ */
+void oscillateText();
+
+/**
+ * Return 1 when the array is completely displayed
+ */
+bool scrollEnd();
 
 private:
-    byte* cols;
-    byte* xcols;
-    byte spiregister[8];
-    byte spidata[8];
-    String myText;
-    String myNextText;
-    int myTextOffset = 1;
-    int myTextAlignmentOffset = 0;
-    int increment = -1;
-    byte myNumberOfDevices = 0;
-    byte mySlaveSelectPin = 0;
-    byte myCharWidth = 7;
-    byte myTextAlignment = 1;
-    byte deviceOrientation = HORIZONTAL;
-    bool scrolling = false;
-    bool oscillating = false;
-    uint8_t scrollspeed = 50;
-    uint8_t enabled = true;
-    
-    void calculateTextAlignmentOffset();
+byte* cols;
+byte* xcols;
+byte spiregister[8];
+byte spidata[8];
+String myText;
+String myNextText;
+int myTextOffset = 1;
+int myTextAlignmentOffset = 0;
+int increment = -1;
+byte myNumberOfDevices = 0;
+byte mySlaveSelectPin = 0;
+byte myCharWidth = 7;
+byte myTextAlignment = 1;
+bool deviceOrientation = 1; // 1 is vertical - 0 is horizontal
+bool flip = 0; //
+
+void calculateTextAlignmentOffset();
 };
