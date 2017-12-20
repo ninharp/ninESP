@@ -7,6 +7,12 @@
 #include <LedMatrix.h>
 #include <app_defaults.h>
 
+#define ROM_0_URL  "http://192.168.8.100:80/rom0.bin"
+#define ROM_1_URL  "http://192.168.8.100:80/rom1.bin"
+#define SPIFFS_URL "http://192.168.8.100:80/spiff_rom.bin"
+
+rBootHttpUpdate* otaUpdater = 0;
+
 //#define printf_P_stack
 
 /* Web and FTP Server instance */
@@ -87,6 +93,79 @@ void IRAM_ATTR keyIRQHandler()
 		}
 		//interrupts();
 	}
+}
+
+void otaUpdateCb(rBootHttpUpdate& client, bool result) {
+
+	Serial.println("In callback...");
+	if(result == true) {
+		// success
+		uint8 slot;
+		slot = rboot_get_current_rom();
+		if (slot == 0) slot = 1; else slot = 0;
+		// set to boot new rom and then reboot
+		Serial.printf("Firmware updated, rebooting to rom %d...\r\n", slot);
+		rboot_set_current_rom(slot);
+		System.restart();
+	} else {
+		// fail
+		Serial.println("Firmware update failed!");
+	}
+}
+
+void otaUpdate() {
+
+	uint8 slot;
+	rboot_config bootconf;
+
+	Serial.println("Updating...");
+
+	// need a clean object, otherwise if run before and failed will not run again
+	if (otaUpdater) delete otaUpdater;
+	otaUpdater = new rBootHttpUpdate();
+
+	// select rom slot to flash
+	bootconf = rboot_get_config();
+	slot = bootconf.current_rom;
+	if (slot == 0) slot = 1; else slot = 0;
+
+#ifndef RBOOT_TWO_ROMS
+	// flash rom to position indicated in the rBoot config rom table
+	otaUpdater->addItem(bootconf.roms[slot], ROM_0_URL);
+#else
+	// flash appropriate rom
+	if (slot == 0) {
+		otaUpdater->addItem(bootconf.roms[slot], ROM_0_URL);
+	} else {
+		otaUpdater->addItem(bootconf.roms[slot], ROM_1_URL);
+	}
+#endif
+
+#ifndef DISABLE_SPIFFS
+	// use user supplied values (defaults for 4mb flash in makefile)
+	if (slot == 0) {
+		otaUpdater->addItem(RBOOT_SPIFFS_0, SPIFFS_URL);
+	} else {
+		otaUpdater->addItem(RBOOT_SPIFFS_1, SPIFFS_URL);
+	}
+#endif
+
+	// request switch and reboot on success
+	//otaUpdater->switchToRom(slot);
+	// and/or set a callback (called on failure or success without switching requested)
+	otaUpdater->setCallback(otaUpdateCb);
+
+	// start update
+	otaUpdater->start();
+}
+
+void serialShowInfo() {
+    Serial.printf("\r\nSDK: v%s\r\n", system_get_sdk_version());
+    Serial.printf("Free Heap: %d\r\n", system_get_free_heap_size());
+    Serial.printf("CPU Frequency: %d MHz\r\n", system_get_cpu_freq());
+    Serial.printf("System Chip ID: %x\r\n", system_get_chip_id());
+    Serial.printf("SPI Flash ID: %x\r\n", spi_flash_get_id());
+    //Serial.printf("SPI Flash Size: %d\r\n", (1 << ((spi_flash_get_id() >> 16) & 0xff)));
 }
 
 void relayTimerCb()
@@ -272,8 +351,10 @@ void startMqttClient()
 	//if (mqtt.isEnabled()) { // if WifiStation.isConnected() .... TODO
 		mqtt.setEnabled(true); //TODO
 		/* Set LWT message and topic */
-		if(!mqtt.setWill(AppSettings.mqtt_topic_lwt, AppSettings.mqtt_userid+"/"+WifiStation.getIP().toString(), 2, true)) {
+		if(!mqtt.setWill(AppSettings.mqtt_topic_lwt, "offline", 2, true)) {
 			debugf("Unable to set the last will and testament. Most probably there is not enough memory on the device.");
+		} else {
+			debugf("MQTT LWT set");
 		}
 
 		/* Populate MQTT Settings from configuration */
@@ -285,7 +366,7 @@ void startMqttClient()
 		mqtt.subscribe(AppSettings.mqtt_topic_cmd);
 
 		/* Publish LWT message */
-		mqtt.publishWithQoS(AppSettings.mqtt_topic_lwt, "online", 1, true);
+		mqtt.publishWithQoS(AppSettings.mqtt_topic_lwt, WifiStation.getIP().toString(), 1, true);
 
 		/* If relay is attached and enabled in settings */
 		if (AppSettings.relay) {
@@ -978,6 +1059,7 @@ void connectOk(IPAddress ip, IPAddress mask, IPAddress gateway)
 	}
 
 	if (AppSettings.motion) {
+		debugf("Starting Motion Sensing Timer");
 		motionCheckTimer.initializeMs(AppSettings.motion_interval, motionSensorCheck).start();
 	}
 
@@ -1046,7 +1128,7 @@ void motionSensorCheck()
 			if (mqtt.getConnectionState() != eTCS_Connected) //TODO remove autoconnect cause of connCheck timer?
 						startMqttClient(); // Auto reconnect
 			mqtt.publishWithQoS(AppSettings.motion_topic, "1", 1, true);
-			//debugf("Motion ON (%s)", AppSettings.motion_topic.c_str());
+			debugf("Motion ON (%s)", AppSettings.motion_topic.c_str());
 		}
 		//digitalWrite(14, 1);
 	} else {
@@ -1055,16 +1137,70 @@ void motionSensorCheck()
 			if (mqtt.getConnectionState() != eTCS_Connected)
 						startMqttClient(); // Auto reconnect
 			mqtt.publishWithQoS(AppSettings.motion_topic, "0", 1, true);
-			//debugf("Motion OFF (%s)", AppSettings.motion_topic.c_str());
+			debugf("Motion OFF (%s)", AppSettings.motion_topic.c_str());
 		}
 		//digitalWrite(14, 0);
+	}
+}
+
+void serialCb(Stream& stream, char arrivedChar, unsigned short availableCharsCount) {
+
+	if (arrivedChar == '\n') {
+		char str[availableCharsCount];
+		for (int i = 0; i < availableCharsCount; i++) {
+			str[i] = stream.read();
+			if (str[i] == '\r' || str[i] == '\n') {
+				str[i] = '\0';
+			}
+		}
+
+		if (!strcmp(str, "ip")) {
+			Serial.printf("ip: %s mac: %s\r\n", WifiStation.getIP().toString().c_str(), WifiStation.getMAC().c_str());
+		} else if (!strcmp(str, "ota")) {
+			otaUpdate();
+		} else if (!strcmp(str, "restart")) {
+			System.restart();
+		} else if (!strcmp(str, "ls")) {
+			Vector<String> files = fileList();
+			Serial.printf("filecount %d\r\n", files.count());
+			for (unsigned int i = 0; i < files.count(); i++) {
+				Serial.println(files[i]);
+			}
+		} else if (!strcmp(str, "cat")) {
+			Vector<String> files = fileList();
+			if (files.count() > 0) {
+				Serial.printf("dumping file %s:\r\n", files[0].c_str());
+				Serial.println(fileGetContent(files[0]));
+			} else {
+				Serial.println("Empty spiffs!");
+			}
+		} else if (!strcmp(str, "info")) {
+			serialShowInfo();
+		} else if (!strcmp(str, "help")) {
+			Serial.println();
+			Serial.println("available commands:");
+			Serial.println("  help - display this message");
+			Serial.println("  ip - show current ip address");
+			Serial.println("  connect - connect to wifi");
+			Serial.println("  restart - restart the esp8266");
+			Serial.println("  ota - perform ota update, switch rom and reboot");
+			Serial.println("  info - show esp8266 info");
+#ifndef DISABLE_SPIFFS
+			Serial.println("  ls - list files in spiffs");
+			Serial.println("  cat - show first file in spiffs");
+#endif
+			Serial.println();
+		} else {
+			Serial.println("unknown command");
+		}
 	}
 }
 
 void init()
 {
 	/* Mount file system, in order to work with files */
-	spiffs_mount();
+	//spiffs_mount();
+	int slot = rboot_get_current_rom();
 
 	/* Start Serial Debug Terminal */
 	Serial.begin(115200); // 115200 by default
@@ -1072,6 +1208,34 @@ void init()
 	//TODO: if debug disabled it get into bootloop, inspect stacktrace
 	/* Enable debug output to serial */
 	Serial.systemDebugOutput(true);
+
+	Serial.setCallback(serialCb);
+
+#ifndef DISABLE_SPIFFS
+	if (slot == 0) {
+#ifdef RBOOT_SPIFFS_0
+		debugf("trying to mount spiffs at 0x%08x, length %d", RBOOT_SPIFFS_0, SPIFF_SIZE);
+		spiffs_mount_manual(RBOOT_SPIFFS_0, SPIFF_SIZE);
+#else
+		debugf("trying to mount spiffs at 0x%08x, length %d", 0x100000, SPIFF_SIZE);
+		spiffs_mount_manual(0x100000, SPIFF_SIZE);
+#endif
+	} else {
+#ifdef RBOOT_SPIFFS_1
+		debugf("trying to mount spiffs at 0x%08x, length %d", RBOOT_SPIFFS_1, SPIFF_SIZE);
+		spiffs_mount_manual(RBOOT_SPIFFS_1, SPIFF_SIZE);
+#else
+		debugf("trying to mount spiffs at 0x%08x, length %d", 0x300000, SPIFF_SIZE);
+		spiffs_mount_manual(0x300000, SPIFF_SIZE);
+#endif
+	}
+#else
+	debugf("spiffs disabled");
+#endif
+
+	Serial.printf("\r\nCurrently running rom %d.\r\n", slot);
+	Serial.printf("NEuer rom kack hier test und so\r\n");
+	Serial.println();
 
 	/* Start initialization of ninHOME node */
 
@@ -1103,8 +1267,10 @@ void init()
 		}
 
 		/* If a motion sensor is attached, enable the input gpio */
-		if (AppSettings.motion)
+		if (AppSettings.motion) {
+			debugf("Motion Sensor activated! Setting pinmode!");
 			pinMode(AppSettings.motion_pin, INPUT_PULLUP); /* config setting for pullup required? */
+		}
 
 		/* If a relay attached and enabled in settings we init it here */
 		if (AppSettings.relay) {

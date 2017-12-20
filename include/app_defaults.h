@@ -12,7 +12,8 @@
 #ifndef INCLUDE_APP_DEFAULTS_H_
 #define INCLUDE_APP_DEFAULTS_H_
 
-#define VER_BUILD		11
+/* Version information (Note: had to be in this order to work properly at the moment) */
+#define VER_BUILD		63
 #define VER_MINOR		1
 #define VER_MAJOR		0
 
