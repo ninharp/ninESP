@@ -278,6 +278,7 @@ void onMQTTMessageReceived(String topic, String message)
 				led.setNextText(message);
 			} else {
 				led.setText(message);
+				led.setNextText(message);
 				for (int i = 0; i < (message.length() * led.getCharWidth()); i++)
 					led.scrollTextLeft();
 			}
@@ -441,6 +442,7 @@ void onIndex(HttpRequest &request, HttpResponse &response)
 
 	response.sendTemplate(tmpl); // will be automatically deleted
 }
+
 
 /* On Reboot target for webserver */
 void onReboot(HttpRequest &request, HttpResponse &response)
