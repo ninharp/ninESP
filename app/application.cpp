@@ -443,6 +443,30 @@ void onIndex(HttpRequest &request, HttpResponse &response)
 	response.sendTemplate(tmpl); // will be automatically deleted
 }
 
+/* Update target for webserver */
+void onUpdate(HttpRequest &request, HttpResponse &response)
+{
+	TemplateFileStream *tmpl = new TemplateFileStream("update.html");
+	//rBootUpdateItem add;
+	//add.targetOffset = RBOOT_SPIFFS_0;
+	//add.size = 0;
+	//rboot_write_status rBootWriteStatus;
+	//rBootWriteStatus = rboot_write_init( add.targetOffset );
+
+
+	//if(!rboot_write_flash(&rBootWriteStatus, (uint8_t *)data, size)) {
+	//	debugf("rboot_write_flash: Failed. Size: %d", size);
+	//}
+
+	auto &vars = tmpl->variables();
+	vars["lastedit"] = lastModified;
+
+	vars["status"] = getStatusString();
+	vars["version"] = app_version;
+
+	response.sendTemplate(tmpl); // will be automatically deleted
+}
+
 
 /* On Reboot target for webserver */
 void onReboot(HttpRequest &request, HttpResponse &response)
