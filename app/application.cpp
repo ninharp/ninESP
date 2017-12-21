@@ -1314,8 +1314,8 @@ void init()
 
 		if (AppSettings.max7219) {
 			debugf("Initialize MAX7219 LED Matrix %d - SS Pin %d", AppSettings.max7219_count, AppSettings.max7219_ss_pin);
-			//led.init(AppSettings.max7219_count, AppSettings.max7219_ss_pin);
-			led.init(5, 4);
+			led.init(AppSettings.max7219_count, AppSettings.max7219_ss_pin);
+			//led.init(5, 4);
 			//led.setIntensity(DEFAULT_MAX7219_INTENSITY); // range is 0-15
 			led.setText(DEFAULT_MAX7219_TEXT);
 			led.clear();
