@@ -467,7 +467,6 @@ void onUpdate(HttpRequest &request, HttpResponse &response)
 	response.sendTemplate(tmpl); // will be automatically deleted
 }
 
-
 /* On Reboot target for webserver */
 void onReboot(HttpRequest &request, HttpResponse &response)
 {
