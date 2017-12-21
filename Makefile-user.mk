@@ -20,7 +20,7 @@ COM_SPEED	= 230400
 #COM_SPEED_SERIAL	= 115200
 
 ## Configure flash parameters (for ESP12-E and other new boards):
-SPI_MODE = dio
+SPI_MODE = qio
 
 ## SPIFFS options
 # DISABLE_SPIFFS = 1
@@ -36,20 +36,20 @@ RBOOT_BIG_FLASH ?= 1
 ## size of the flash chip
 SPI_SIZE        ?= 4M
 ## output file for first rom (.bin will be appended)
-#RBOOT_ROM_0     ?= rom0
+RBOOT_ROM_0     ?= rom0
 ## input linker file for first rom
 #RBOOT_LD_0      ?= rom0.ld
 ## these next options only needed when using two rom mode
 #RBOOT_ROM_1     ?= rom1
 #RBOOT_LD_1      ?= rom1.ld
 ## size of the spiffs to create
-SPIFF_SIZE      ?= 500000
+SPIFF_SIZE      ?= 200000
 ## option to completely disable spiffs
 #DISABLE_SPIFFS  = 1
 ## flash offsets for spiffs, set if using two rom mode or not on a 4mb flash
 ## (spiffs location defaults to the mb after the rom slot on 4mb flash)
-RBOOT_SPIFFS_0  ?= 0x100000
-RBOOT_SPIFFS_1  ?= 0x300000
+#RBOOT_SPIFFS_0  ?= 0x100000
+#RBOOT_SPIFFS_1  ?= 0x300000
 ## esptool2 path
 #ESPTOOL2        ?= esptool2
 
@@ -57,3 +57,8 @@ flash2:
 	$(vecho) "Killing Terminal to free $(COM_PORT)"
 	-$(Q) $(KILL_TERM)
 	$(ESPTOOL) -p $(COM_PORT) -b $(COM_SPEED_ESPTOOL) write_flash $(flashimageoptions) $(basename $(IMAGE_MAIN)) $(FW_BASE)/$(IMAGE_MAIN) $(IMAGE_SDK_OFFSET) $(FW_BASE)/$(IMAGE_SDK)
+
+flash3:
+	$(vecho) "Killing Terminal to free $(COM_PORT)"
+	-$(Q) $(KILL_TERM)
+	$(ESPTOOL) -p $(COM_PORT) -b $(COM_SPEED_ESPTOOL) write_flash $(flashimageoptions) $(basename $(IMAGE_MAIN)) 0x02000 $(RBOOT_ROM_0) 
