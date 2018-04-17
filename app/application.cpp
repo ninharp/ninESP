@@ -1,6 +1,6 @@
 #include <application.h>
 #include <webinterface.h>
-#include <ota.h>
+//#include <ota.h>
 
 extern BssList wNetworks;
 extern String lastModified;
@@ -10,6 +10,15 @@ void startMqttClient();
 void onReceiveUDP(UdpConnection& connection, char *data, int size, IPAddress remoteIP, uint16_t remotePort);
 void statusLed(bool state);
 void motionSensorCheck();
+uint32_t Wheel(byte WheelPos);
+
+/* WS2812 instance */
+uint8_t ledcount = 70;
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(ledcount, 4, NEO_RGB + NEO_KHZ800);
+Timer ledPatternTimer;
+
+// Set the LCD address to 0x27
+LiquidCrystal_I2C lcd(0x27);
 
 /* MQTT client instance */
 /* For quickly check you can use: http://www.hivemq.com/demos/websocket-client/ (Connection= test.mosquitto.org:8080) */
@@ -114,6 +123,39 @@ void onReceiveUDP(UdpConnection& connection, char *data, int size, IPAddress rem
 			}
 		}
 	}
+	else if (data[0] == 'l' && size == 6) {
+		/*buffer[0+i*3] = (hex>>8);
+		buffer[1+i*3] = (hex);
+		buffer[2+i*3] = (hex>>16);*/
+		uint8_t n = data[1];
+		uint32_t col;
+		uint8_t c1 = data[2];
+		uint8_t c2 = data[3];
+		uint8_t c3 = data[4];
+		Serial.println(n, DEC);
+		Serial.println(c1, DEC);
+		Serial.println(c2, DEC);
+		Serial.println(c3, DEC);
+		strip.setPixelColor(n, c1, c2, c3);
+		strip.show();
+		udp.sendStringTo(remoteIP, remotePort, "ok");
+
+	}
+	else if (data[0] == 'f' && size == ((ledcount*3)+1+1)) {
+		// change to 16 bit if supporting more than 254 leds
+		for (uint8_t i = 0; i <= ((ledcount*3)+1); i += 3) {
+			uint8_t j = i;
+			if (i > 3)
+				j = (i / 3); // - 1;
+
+			uint8_t c1 = data[i+1];
+			uint8_t c2 = data[i+2];
+			uint8_t c3 = data[i+3];
+			strip.setPixelColor(j, c1, c2, c3);
+		}
+		strip.show();
+		//udp.sendStringTo(remoteIP, remotePort, "ok");
+	}
 	// Send echo to remote sender
 	//String text = String("echo: ") + data + "[" + size + "]";
 	//udp.sendStringTo(remoteIP, remotePort, text);
@@ -122,7 +164,7 @@ void onReceiveUDP(UdpConnection& connection, char *data, int size, IPAddress rem
 /* Callback for messages, arrived from MQTT server */
 void onMQTTMessageReceived(String topic, String message)
 {
-	debugf("Debug: %s - %s", topic.c_str(), message.c_str());
+	//debugf("Debug: %s - %s", topic.c_str(), message.c_str());
 
 	/* If Relay is enabled and topic equals the topic from config then check payload */
 	if (AppSettings.relay && AppSettings.relay_topic_cmd.equals(topic)) {
@@ -426,6 +468,19 @@ void ledMatrixCb()
 	ledMatrixTimer.restart();
 }
 
+void ledPatternCb()
+{
+	uint16_t i, j;
+
+	/*for(j=0; j<256; j++) {
+		for(i=0; i<strip.numPixels(); i++) {
+			strip.setPixelColor(i, Wheel((i+j) & 255));
+		}
+		strip.show();
+		//delay(10);
+	}*/
+}
+
 /* Callback when WiFi station was connected to AP and got IP */
 void connectOk(IPAddress ip, IPAddress mask, IPAddress gateway)
 {
@@ -469,6 +524,9 @@ void connectOk(IPAddress ip, IPAddress mask, IPAddress gateway)
 	if (AppSettings.max7219) {
 		ledMatrixTimer.initializeMs(200, ledMatrixCb).start();
 	}
+
+	strip.begin();
+	ledPatternTimer.initializeMs(50, ledPatternCb).start();
 
 	/* Start timer which checks the connection to MQTT */
 	checkConnectionTimer.initializeMs(DEFAULT_CONNECT_CHECK_INTERVAL, checkMQTTConnection).start();
@@ -555,9 +613,9 @@ void serialCb(Stream& stream, char arrivedChar, unsigned short availableCharsCou
 
 		if (!strcmp(str, "ip")) {
 			Serial.printf("ip: %s mac: %s\r\n", WifiStation.getIP().toString().c_str(), WifiStation.getMAC().c_str());
-		} else if (!strcmp(str, "ota")) {
+		/*} else if (!strcmp(str, "ota")) {
 			otaUpdate();
-		} else if (!strcmp(str, "restart")) {
+		*/} else if (!strcmp(str, "restart")) {
 			System.restart();
 		} else if (!strcmp(str, "ls")) {
 			Vector<String> files = fileList();
@@ -595,11 +653,27 @@ void serialCb(Stream& stream, char arrivedChar, unsigned short availableCharsCou
 	}
 }
 
+// Input a value 0 to 255 to get a color value.
+// The colours are a transition r - g - b - back to r.
+uint32_t Wheel(byte WheelPos)
+{
+  WheelPos = 255 - WheelPos;
+  if(WheelPos < 85) {
+    return strip.Color(255 - WheelPos * 3, 0, WheelPos * 3);
+  }
+  if(WheelPos < 170) {
+    WheelPos -= 85;
+    return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3);
+  }
+  WheelPos -= 170;
+  return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+}
+
 void init()
 {
 	/* Mount file system, in order to work with files */
 	spiffs_mount();
-	int slot = rboot_get_current_rom();
+	//int slot = rboot_get_current_rom();
 
 	/* Start Serial Debug Terminal */
 	Serial.begin(115200); // 115200 by default
@@ -608,7 +682,20 @@ void init()
 	/* Enable debug output to serial */
 	Serial.systemDebugOutput(true);
 
+	// initialize the LCD
+	lcd.begin(16,2);
+	lcd.setBacklightPin(3, POSITIVE);
+	lcd.setBacklight(HIGH);
+	// Turn on the blacklight and print a message.
+	lcd.home ();                   // go home
+	lcd.print("Hello, ARDUINO ");
+	lcd.setCursor ( 0, 1 );        // go to the next line
+	lcd.print (" FORUM - fm   ");
+
+	while(1) {};
+
 	Serial.setCallback(serialCb);
+
 /*
 #ifndef DISABLE_SPIFFS
 	if (slot == 0) {

@@ -20,7 +20,7 @@ COM_SPEED	= 230400
 #COM_SPEED_SERIAL	= 115200
 
 ## Configure flash parameters (for ESP12-E and other new boards):
-SPI_MODE = qio
+SPI_MODE = qio    
 
 ## SPIFFS options
 # DISABLE_SPIFFS = 1
@@ -28,7 +28,7 @@ SPIFF_FILES = web/build
 
 #### overridable rBoot options ####
 ## use rboot build mode
-RBOOT_ENABLED ?= 1
+RBOOT_ENABLED ?= 0
 ## enable big flash support (for multiple roms, each in separate 1mb block of flash)
 RBOOT_BIG_FLASH ?= 1
 ## two rom mode (where two roms sit in the same 1mb block of flash)
@@ -56,7 +56,9 @@ SPIFF_SIZE      ?= 200000
 flash2:
 	$(vecho) "Killing Terminal to free $(COM_PORT)"
 	-$(Q) $(KILL_TERM)
-	$(ESPTOOL) -p $(COM_PORT) -b $(COM_SPEED_ESPTOOL) write_flash $(flashimageoptions) $(basename $(IMAGE_MAIN)) $(FW_BASE)/$(IMAGE_MAIN) $(IMAGE_SDK_OFFSET) $(FW_BASE)/$(IMAGE_SDK)
+	$(vecho) "Writing $(basename $(IMAGE_MAIN)) $(FW_BASE)/$(IMAGE_MAIN) $(IMAGE_SDK_OFFSET) $(FW_BASE)/$(IMAGE_SDK)"
+	$(ESPTOOL) -p $(COM_PORT) -b $(COM_SPEED_ESPTOOL) write_flash $(flashimageoptions) $(basename $(IMAGE_MAIN)) $(FW_BASE)/$(IMAGE_MAIN) 
+#$(IMAGE_SDK_OFFSET) $(FW_BASE)/$(IMAGE_SDK)
 
 flash3:
 	$(vecho) "Killing Terminal to free $(COM_PORT)"

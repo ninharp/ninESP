@@ -12,9 +12,12 @@
 #include <SmingCore/SmingCore.h>
 #include <AppSettings.h>
 #include <Libraries/RCSwitch/RCSwitch.h>
+#include <Libraries/Adafruit_NeoPixel/Adafruit_NeoPixel.h>
+#include <Libraries/LiquidCrystal/LiquidCrystal_I2C.h>
 #include <RelaySwitch.h>
 #include <ninMQTTClient.h>
 #include <LedMatrix.h>
+
 #include <app_defaults.h>
 
 void connectOk(IPAddress ip, IPAddress mask, IPAddress gateway);
