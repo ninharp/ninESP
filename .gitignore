@@ -1,9 +1,5 @@
 node_modules
 web/bak
-out/*
-out/build/*
-out/build/app/*
-out/firmware/*
 doc/media/*
 web/*/.lastModified
 web/*/.settings.conf
@@ -11,3 +7,4 @@ web/*/.mqtt_settings.conf
 web/*/.periph_settings.conf
 web/.*.conf
 temp
+out/

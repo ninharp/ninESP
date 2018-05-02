@@ -497,7 +497,7 @@ void onAjaxConnect(HttpRequest &request, HttpResponse &response)
 /* Will be called when system initialization was completed */
 void startWebinterface()
 {
-	startFTP();
+	//startFTP();
 	startWebServer();
 }
 
@@ -506,7 +506,16 @@ void startWebServer()
 {
 	/* Listen on Port */
 	//TODO: Webserver port in configuration file?
-	server.listen(80);
+	if (!server.listen(80)) {
+		debugf("Cannot start Webserver");
+		return;
+	} else {
+		debugf("Webserver started!");
+	}
+
+	/* Check for existing index.html, else create a empty one with error message */
+	if (!fileExist("index.html"))
+		fileSetContent("index.html", "<h3>No SPIFFS found! Contact supplier!</h3>");
 
 	/* Add targets to server */
 	server.addPath("/", onIndex);
@@ -520,15 +529,11 @@ void startWebServer()
 
 	/* Any other targets */
 	server.setDefaultHandler(onFile);
-	}
+}
 
 /* Starts the FTP Server with fixed credentials, just for debugging purposes, had to be disabled in production state */
 void startFTP()
 {
-	/* Check for existing index.html, else create a empty one with error message */
-	if (!fileExist("index.html"))
-			fileSetContent("index.html", "<h3>No SPIFFS found! Contact supplier!</h3>");
-
 	/* Start FTP server instance */
 	ftp.listen(DEFAULT_FTP_PORT);
 

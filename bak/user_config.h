@@ -36,7 +36,7 @@ extern "C" {
 	#include <espinc/lwip_includes.h>
 
 	// Beta boards
-	#define BOARD_ESP01
+	//#define BOARD_ESP01
 
 #ifdef __cplusplus
 }

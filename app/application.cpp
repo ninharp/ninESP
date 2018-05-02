@@ -488,50 +488,56 @@ void connectOk(IPAddress ip, IPAddress mask, IPAddress gateway)
 	debugf("I'm CONNECTED");
 	Serial.println(ip.toString());
 
-	AppSettings.loadMQTT();
-	mqtt.setEnabled(AppSettings.mqtt_enabled);
+	if (AppSettings.existMQTT()) {
+		AppSettings.loadMQTT();
+		mqtt.setEnabled(AppSettings.mqtt_enabled);
 
-	/* Start MQTT client and publish/subscribe used extensions */
-	//if (mqtt.isEnabled()) {
-	debugf("Starting MQTT Client");
-	startMqttClient();
-	//} else {
-	//	debugf("MQTT still disabled, update settings!");
-	//}
+		/* Start MQTT client and publish/subscribe used extensions */
+		//if (mqtt.isEnabled()) {
+		debugf("Starting MQTT Client");
+		startMqttClient();
+		//} else {
+		//	debugf("MQTT still disabled, update settings!");
+		//}
 
-	//TODO: Is another load of peripheral settings necessary?
-	/* Load peripheral settings */
-	AppSettings.loadPeriph();
+		//TODO: Is another load of peripheral settings necessary?
+		/* Load peripheral settings */
+		if (AppSettings.existPeriph()) {
+			AppSettings.loadPeriph();
 
-	/* Start Services for Peripherals */
-	startServices();
+			/* Start Services for Peripherals */
+			startServices();
 
-	/* Start Timer for publishing attached sensor values, interval from settings */
-	/* Add every sensor who want to publish something here */
-	if (AppSettings.adc) {
-		sensorPublishTimer.initializeMs(AppSettings.timer_delay, sensorPublish).start();
+			/* Start Timer for publishing attached sensor values, interval from settings */
+			/* Add every sensor who want to publish something here */
+			if (AppSettings.adc) {
+				sensorPublishTimer.initializeMs(AppSettings.timer_delay, sensorPublish).start();
+			}
+
+			if (AppSettings.motion) {
+				debugf("Starting Motion Sensing Timer");
+				motionCheckTimer.initializeMs(AppSettings.motion_interval, motionSensorCheck).start();
+			}
+
+			if (AppSettings.relay && AppSettings.keyinput) {
+				debounceTimer.initializeMs(100, debounceKey).start();
+			}
+
+			if (AppSettings.max7219) {
+				ledMatrixTimer.initializeMs(200, ledMatrixCb).start();
+			}
+
+			strip.begin();
+			ledPatternTimer.initializeMs(50, ledPatternCb).start();
+
+			/* Start timer which checks the connection to MQTT */
+			checkConnectionTimer.initializeMs(DEFAULT_CONNECT_CHECK_INTERVAL, checkMQTTConnection).start();
+
+			//stopAP(); TODO: When to stop AP? Or manually triggered in webinterface?
+		}
+	} else {
+		debugf("No MQTT Settings found. Not starting MQTT client");
 	}
-
-	if (AppSettings.motion) {
-		debugf("Starting Motion Sensing Timer");
-		motionCheckTimer.initializeMs(AppSettings.motion_interval, motionSensorCheck).start();
-	}
-
-	if (AppSettings.relay && AppSettings.keyinput) {
-		debounceTimer.initializeMs(100, debounceKey).start();
-	}
-
-	if (AppSettings.max7219) {
-		ledMatrixTimer.initializeMs(200, ledMatrixCb).start();
-	}
-
-	strip.begin();
-	ledPatternTimer.initializeMs(50, ledPatternCb).start();
-
-	/* Start timer which checks the connection to MQTT */
-	checkConnectionTimer.initializeMs(DEFAULT_CONNECT_CHECK_INTERVAL, checkMQTTConnection).start();
-
-	//stopAP(); TODO: When to stop AP? Or manually triggered in webinterface?
 }
 
 // Callback when WiFi station timeout was reached
@@ -683,7 +689,7 @@ void init()
 	Serial.systemDebugOutput(true);
 
 	// initialize the LCD
-	lcd.begin(16,2);
+	/*lcd.begin(16,2);
 	lcd.setBacklightPin(3, POSITIVE);
 	lcd.setBacklight(HIGH);
 	// Turn on the blacklight and print a message.
@@ -691,8 +697,7 @@ void init()
 	lcd.print("Hello, ARDUINO ");
 	lcd.setCursor ( 0, 1 );        // go to the next line
 	lcd.print (" FORUM - fm   ");
-
-	while(1) {};
+*/
 
 	Serial.setCallback(serialCb);
 

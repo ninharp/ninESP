@@ -111,8 +111,9 @@ bool ninMqttClient::connect(const String& clientName, const String& username, co
 
 bool ninMqttClient::publish(String topic, String message, bool retained /* = false*/)
 {
+//int mqtt_publish(mqtt_broker_handle_t* broker, const char* topic, const char* msg, uint16_t msglen, uint8_t retain);
 	if (enabled) {
-		int res = mqtt_publish(&broker, topic.c_str(), message.c_str(), retained);
+		int res = mqtt_publish(&broker, topic.c_str(), message.c_str(), message.length(), retained);
 		return res > 0;
 	} else {
 		return false;
@@ -123,7 +124,7 @@ bool ninMqttClient::publishWithQoS(String topic, String message, int QoS, bool r
 {
 	if (enabled) {
 		uint16_t msgId = 0;
-		int res = mqtt_publish_with_qos(&broker, topic.c_str(), message.c_str(), retained, QoS, &msgId);
+		int res = mqtt_publish_with_qos(&broker, topic.c_str(), message.c_str(), message.length(), retained, QoS, &msgId);
 		if(QoS == 0 && onDelivery) {
 			debugf("The delivery callback is ignored for QoS 0.");
 		}
