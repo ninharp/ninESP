@@ -1,5 +1,6 @@
 #include <application.h>
 #include <webinterface.h>
+
 //#include <ota.h>
 
 extern BssList wNetworks;
@@ -385,7 +386,7 @@ void startAP()
 	//TODO: activate mDNS on startAP()
 	/* Start mDNS server on Wifi Accesspoint IP */
 	//startmDNS(WifiAccessPoint.getIP());
-	}
+}
 
 /* Stop Wifi Accesspoint if running */
 void stopAP()
@@ -426,7 +427,6 @@ void debounceKey()
 			key_pressed = false; // reset key_pressed value
 			interrupts(); // re-enable the interrupts
 		}
-
 	}
 }
 
