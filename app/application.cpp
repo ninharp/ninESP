@@ -11,12 +11,6 @@ void startMqttClient();
 void onReceiveUDP(UdpConnection& connection, char *data, int size, IPAddress remoteIP, uint16_t remotePort);
 void statusLed(bool state);
 void motionSensorCheck();
-uint32_t Wheel(byte WheelPos);
-
-/* WS2812 instance */
-uint8_t ledcount = 70;
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(ledcount, 4, NEO_RGB + NEO_KHZ800);
-Timer ledPatternTimer;
 
 // Set the LCD address to 0x27
 LiquidCrystal_I2C lcd(0x27);
@@ -32,10 +26,37 @@ UdpConnection udp = UdpConnection(onReceiveUDP);
 RCSwitch rcSwitch = RCSwitch();
 RelaySwitch relay = RelaySwitch();
 
-LedMatrix led = LedMatrix(DEFAULT_MAX7219_COUNT, DEFAULT_MAX7219_SS_PIN);
+MD_Parola led = MD_Parola(DEFAULT_MAX7219_SS_PIN, 7); //DEFAULT_MAX7219_COUNT);
+
+// Sprite Definitions
+const uint8_t F_PMAN1 = 6;
+const uint8_t W_PMAN1 = 8;
+static uint8_t pacman1[F_PMAN1 * W_PMAN1] =  // gobbling pacman animation
+{
+  0x00, 0x81, 0xc3, 0xe7, 0xff, 0x7e, 0x7e, 0x3c,
+  0x00, 0x42, 0xe7, 0xe7, 0xff, 0xff, 0x7e, 0x3c,
+  0x24, 0x66, 0xe7, 0xff, 0xff, 0xff, 0x7e, 0x3c,
+  0x3c, 0x7e, 0xff, 0xff, 0xff, 0xff, 0x7e, 0x3c,
+  0x24, 0x66, 0xe7, 0xff, 0xff, 0xff, 0x7e, 0x3c,
+  0x00, 0x42, 0xe7, 0xe7, 0xff, 0xff, 0x7e, 0x3c,
+};
+
+const uint8_t F_PMAN2 = 6;
+const uint8_t W_PMAN2 = 18;
+static uint8_t pacman2[F_PMAN2 * W_PMAN2] =  // ghost pursued by a pacman
+{
+  0x00, 0x81, 0xc3, 0xe7, 0xff, 0x7e, 0x7e, 0x3c, 0x00, 0x00, 0x00, 0xfe, 0x7b, 0xf3, 0x7f, 0xfb, 0x73, 0xfe,
+  0x00, 0x42, 0xe7, 0xe7, 0xff, 0xff, 0x7e, 0x3c, 0x00, 0x00, 0x00, 0xfe, 0x7b, 0xf3, 0x7f, 0xfb, 0x73, 0xfe,
+  0x24, 0x66, 0xe7, 0xff, 0xff, 0xff, 0x7e, 0x3c, 0x00, 0x00, 0x00, 0xfe, 0x7b, 0xf3, 0x7f, 0xfb, 0x73, 0xfe,
+  0x3c, 0x7e, 0xff, 0xff, 0xff, 0xff, 0x7e, 0x3c, 0x00, 0x00, 0x00, 0xfe, 0x73, 0xfb, 0x7f, 0xf3, 0x7b, 0xfe,
+  0x24, 0x66, 0xe7, 0xff, 0xff, 0xff, 0x7e, 0x3c, 0x00, 0x00, 0x00, 0xfe, 0x73, 0xfb, 0x7f, 0xf3, 0x7b, 0xfe,
+  0x00, 0x42, 0xe7, 0xe7, 0xff, 0xff, 0x7e, 0x3c, 0x00, 0x00, 0x00, 0xfe, 0x73, 0xfb, 0x7f, 0xf3, 0x7b, 0xfe,
+};
+
 /* Timer for MAX7219 LED Matrix */
 bool scrollText = true;
 bool displayEnable = true;
+bool displayAnim = true;
 Timer ledMatrixTimer;
 
 /* Timer to check for connection */
@@ -124,39 +145,6 @@ void onReceiveUDP(UdpConnection& connection, char *data, int size, IPAddress rem
 			}
 		}
 	}
-	else if (data[0] == 'l' && size == 6) {
-		/*buffer[0+i*3] = (hex>>8);
-		buffer[1+i*3] = (hex);
-		buffer[2+i*3] = (hex>>16);*/
-		uint8_t n = data[1];
-		uint32_t col;
-		uint8_t c1 = data[2];
-		uint8_t c2 = data[3];
-		uint8_t c3 = data[4];
-		Serial.println(n, DEC);
-		Serial.println(c1, DEC);
-		Serial.println(c2, DEC);
-		Serial.println(c3, DEC);
-		strip.setPixelColor(n, c1, c2, c3);
-		strip.show();
-		udp.sendStringTo(remoteIP, remotePort, "ok");
-
-	}
-	else if (data[0] == 'f' && size == ((ledcount*3)+1+1)) {
-		// change to 16 bit if supporting more than 254 leds
-		for (uint8_t i = 0; i <= ((ledcount*3)+1); i += 3) {
-			uint8_t j = i;
-			if (i > 3)
-				j = (i / 3); // - 1;
-
-			uint8_t c1 = data[i+1];
-			uint8_t c2 = data[i+2];
-			uint8_t c3 = data[i+3];
-			strip.setPixelColor(j, c1, c2, c3);
-		}
-		strip.show();
-		//udp.sendStringTo(remoteIP, remotePort, "ok");
-	}
 	// Send echo to remote sender
 	//String text = String("echo: ") + data + "[" + size + "]";
 	//udp.sendStringTo(remoteIP, remotePort, text);
@@ -221,6 +209,7 @@ void onMQTTMessageReceived(String topic, String message)
 			displayEnable = message.toInt();
 		}
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_text)) {
+			/*
 			if (scrollText) {
 				led.setNextText(message);
 			} else {
@@ -229,21 +218,45 @@ void onMQTTMessageReceived(String topic, String message)
 				for (int i = 0; i < (message.length() * led.getCharWidth()); i++)
 					led.scrollTextLeft();
 			}
+			*/
+			AppSettings.max7219_text = message;
+			displayAnim = true;
+			led.displayReset();
+			//led.setTextBuffer((char*)AppSettings.max7219_text.c_str());
+			led.displayText((char*)AppSettings.max7219_text.c_str(), AppSettings.max7219_alignment, led.getSpeed(), led.getPause(), AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
+			Serial.printf("Displaying Text '%s' with align of %d speed (%d/%d)\r\n", AppSettings.max7219_text.c_str(), AppSettings.max7219_alignment, led.getSpeed(), led.getPause());
+			Serial.printf("Effect In/Out %d/%d\r\n", AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
 		}
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_speed)) {
-			ledMatrixTimer.setIntervalMs(message.toInt());
+			//ledMatrixTimer.setIntervalMs(message.toInt());
+			//led.displayReset();
+			led.setSpeed(message.toInt());
+		}
+		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_pause)) {
+			//ledMatrixTimer.setIntervalMs(message.toInt());
+			//led.displayReset();
+			led.setPause(message.toInt());
 		}
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_charwidth)) {
-			led.setCharWidth(message.toInt());
+			led.setCharSpacing(message.toInt());
 		}
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_scroll)) {
 			scrollText = message.toInt();
 		}
-		//else if (topic.equals("client2/display/oscil")) {
-		//	oscilText = message.toInt();
-		//}
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_intensity)) {
 			led.setIntensity(message.toInt());
+		}
+		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_effect_in)) {
+			//led.displayReset();
+			AppSettings.max7219_effect_in = (textEffect_t)message.toInt();
+		}
+		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_effect_out)) {
+			//led.displayReset();
+			AppSettings.max7219_effect_out = (textEffect_t)message.toInt();
+		}
+		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_alignment)) {
+			//led.displayReset();
+			AppSettings.max7219_alignment = (textPosition_t)message.toInt();
 		}
 	}
 }
@@ -450,35 +463,33 @@ void networkScanCompleted(bool succeeded, BssList list)
 void ledMatrixCb()
 {
 	ledMatrixTimer.stop();
-	led.clear();
 
-	if (scrollText)
-		led.scrollTextLeft();
-
-	led.drawText();
-	//led.commit();
+	//led.displayClear();
 
 	if (displayEnable) {
-		led.commit(); // commit transfers the byte buffer to the displays
+		//led.commit(); // commit transfers the byte buffer to the displays
+		//led.displayText((char *)"Testing 1 2 3", PA_CENTER, led.getSpeed(), 200, PA_SLICE, PA_RANDOM);
+		//led.displayText((char*)AppSettings.max7219_text.c_str(), AppSettings.max7219_alignment, led.getSpeed(), led.getPause(), AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
+
+		if (displayAnim) {
+			while(!led.displayAnimate()) {
+				yield();
+			}
+			displayAnim = false;
+		}
+
+		if (scrollText) {
+			led.displayText((char*)AppSettings.max7219_text.c_str(), AppSettings.max7219_alignment, led.getSpeed(), led.getPause(), AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
+			displayAnim = true;
+		}
+		//delay(led.getSpeed());
+
 	} else {
-		led.clear();
-		led.commit();
+		//led.clear();
+		led.displayClear();
 	}
 
 	ledMatrixTimer.restart();
-}
-
-void ledPatternCb()
-{
-	uint16_t i, j;
-
-	/*for(j=0; j<256; j++) {
-		for(i=0; i<strip.numPixels(); i++) {
-			strip.setPixelColor(i, Wheel((i+j) & 255));
-		}
-		strip.show();
-		//delay(10);
-	}*/
 }
 
 /* Callback when WiFi station was connected to AP and got IP */
@@ -524,11 +535,8 @@ void connectOk(IPAddress ip, IPAddress mask, IPAddress gateway)
 			}
 
 			if (AppSettings.max7219) {
-				ledMatrixTimer.initializeMs(200, ledMatrixCb).start();
+				ledMatrixTimer.initializeMs(5, ledMatrixCb).start();
 			}
-
-			strip.begin();
-			ledPatternTimer.initializeMs(50, ledPatternCb).start();
 
 			/* Start timer which checks the connection to MQTT */
 			checkConnectionTimer.initializeMs(DEFAULT_CONNECT_CHECK_INTERVAL, checkMQTTConnection).start();
@@ -659,22 +667,6 @@ void serialCb(Stream& stream, char arrivedChar, unsigned short availableCharsCou
 	}
 }
 
-// Input a value 0 to 255 to get a color value.
-// The colours are a transition r - g - b - back to r.
-uint32_t Wheel(byte WheelPos)
-{
-  WheelPos = 255 - WheelPos;
-  if(WheelPos < 85) {
-    return strip.Color(255 - WheelPos * 3, 0, WheelPos * 3);
-  }
-  if(WheelPos < 170) {
-    WheelPos -= 85;
-    return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3);
-  }
-  WheelPos -= 170;
-  return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
-}
-
 void init()
 {
 	/* Mount file system, in order to work with files */
@@ -779,13 +771,22 @@ void init()
 
 		if (AppSettings.max7219) {
 			debugf("Initialize MAX7219 LED Matrix x%d - SS Pin %d", AppSettings.max7219_count, AppSettings.max7219_ss_pin);
-			led.init(AppSettings.max7219_count, AppSettings.max7219_ss_pin);
+			//led.init(AppSettings.max7219_count, AppSettings.max7219_ss_pin);
+			//TODO: Set SS Pin and Count to runtime
+			led.begin();
+			#if ENA_SPRITE
+			led.setSpriteData(pacman1, W_PMAN1, F_PMAN1, pacman2, W_PMAN2, F_PMAN2);
+			#endif
+
 			//led.init(8, 4);
 			//led.setIntensity(DEFAULT_MAX7219_INTENSITY); // range is 0-15
-			led.setText(DEFAULT_MAX7219_TEXT);
-			led.clear();
-			//led.drawText();
-			//led.commit();
+			//led.setText(DEFAULT_MAX7219_TEXT);
+
+			//led.clear();
+			led.displayClear();
+			led.setSpeed(AppSettings.max7219_speed);
+			//led.displayText((char*)"", AppSettings.max7219_alignment, led.getSpeed(), led.getPause(), AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
+
 			//ledMatrixTimer.initializeMs(200, ledMatrixCb).start();
 		}
 

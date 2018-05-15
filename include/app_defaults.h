@@ -13,7 +13,7 @@
 #define INCLUDE_APP_DEFAULTS_H_
 
 /* Version information (Note: had to be in this order to work properly at the moment) */
-#define VER_BUILD		484
+#define VER_BUILD		649
 #define VER_MINOR		1
 #define VER_MAJOR		0
 
@@ -91,12 +91,20 @@
 #define DEFAULT_MAX7219_TEXT ""
 #define DEFAULT_MAX7219_ORIENTATION 1
 #define DEFAULT_MAX7219_INTENSITY 7
+#define DEFAULT_MAX7219_SPEED 10
+#define DEFAULT_MAX7219_ALIGNMENT PA_CENTER
+#define DEFAULT_MAX7219_EFFECT_IN PA_PRINT
+#define DEFAULT_MAX7219_EFFECT_OUT PA_NO_EFFECT
 #define DEFAULT_MAX7219_TOPIC_PREFIX "client/display/"
 #define DEFAULT_MAX7219_TOPIC_ENABLE "enable"
 #define DEFAULT_MAX7219_TOPIC_SCROLL "scroll"
 #define DEFAULT_MAX7219_TOPIC_SPEED "speed"
+#define DEFAULT_MAX7219_TOPIC_PAUSE "pause"
 #define DEFAULT_MAX7219_TOPIC_CHARWIDTH "charwidth"
 #define DEFAULT_MAX7219_TOPIC_TEXT "text"
 #define DEFAULT_MAX7219_TOPIC_INTENSITY "intensity"
+#define DEFAULT_MAX7219_TOPIC_ALIGNMENT "alignment"
+#define DEFAULT_MAX7219_TOPIC_EFFECT_IN "effectin"
+#define DEFAULT_MAX7219_TOPIC_EFFECT_OUT "effectout"
 
 #endif /* INCLUDE_APP_DEFAULTS_H_ */

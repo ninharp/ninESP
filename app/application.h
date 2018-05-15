@@ -12,11 +12,13 @@
 #include <SmingCore/SmingCore.h>
 #include <AppSettings.h>
 #include <Libraries/RCSwitch/RCSwitch.h>
-#include <Libraries/Adafruit_NeoPixel/Adafruit_NeoPixel.h>
 #include <Libraries/LiquidCrystal/LiquidCrystal_I2C.h>
+#include <MD_Parola.h>
+#include <MD_MAX72xx.h>
+#include <SPI.h>
 #include <RelaySwitch.h>
 #include <ninMQTTClient.h>
-#include <LedMatrix.h>
+
 
 #include <app_defaults.h>
 

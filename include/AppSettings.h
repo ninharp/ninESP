@@ -10,6 +10,7 @@
 
 #include <SmingCore/SmingCore.h>
 #include <app_defaults.h>
+#include <MD_Parola.h>
 
 #ifndef INCLUDE_APPSETTINGS_H_
 #define INCLUDE_APPSETTINGS_H_
@@ -84,6 +85,11 @@ struct ApplicationSettingsStorage
 	uint8_t max7219_count = DEFAULT_MAX7219_COUNT;
 	int8_t max7219_ss_pin = DEFAULT_MAX7219_SS_PIN;
 	String max7219_text = DEFAULT_MAX7219_TEXT;
+	uint16_t max7219_speed = DEFAULT_MAX7219_SPEED;
+	uint16_t max7219_pause = DEFAULT_MAX7219_SPEED;
+	textEffect_t max7219_effect_in = DEFAULT_MAX7219_EFFECT_IN;
+	textEffect_t max7219_effect_out = DEFAULT_MAX7219_EFFECT_OUT;
+	textPosition_t max7219_alignment = DEFAULT_MAX7219_ALIGNMENT;
 	uint8_t max7219_orientation = DEFAULT_MAX7219_ORIENTATION;
 	String max7219_topic_prefix = DEFAULT_MAX7219_TOPIC_PREFIX;
 	String max7219_topic_enable = DEFAULT_MAX7219_TOPIC_ENABLE;
@@ -91,7 +97,11 @@ struct ApplicationSettingsStorage
 	String max7219_topic_speed = DEFAULT_MAX7219_TOPIC_SPEED;
 	String max7219_topic_charwidth = DEFAULT_MAX7219_TOPIC_CHARWIDTH;
 	String max7219_topic_intensity = DEFAULT_MAX7219_TOPIC_INTENSITY;
+	String max7219_topic_alignment = DEFAULT_MAX7219_TOPIC_ALIGNMENT;
 	String max7219_topic_text = DEFAULT_MAX7219_TOPIC_TEXT;
+	String max7219_topic_pause = DEFAULT_MAX7219_TOPIC_PAUSE;
+	String max7219_topic_effect_in = DEFAULT_MAX7219_TOPIC_EFFECT_IN;
+	String max7219_topic_effect_out = DEFAULT_MAX7219_TOPIC_EFFECT_OUT;
 
 	/* Motion Sensor Config */
 	bool motion = DEFAULT_MOTION_SENSOR;
