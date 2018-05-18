@@ -96,6 +96,7 @@ struct ApplicationSettingsStorage
 	String max7219_topic_scroll = DEFAULT_MAX7219_TOPIC_SCROLL;
 	String max7219_topic_speed = DEFAULT_MAX7219_TOPIC_SPEED;
 	String max7219_topic_charwidth = DEFAULT_MAX7219_TOPIC_CHARWIDTH;
+	String max7219_topic_invert = DEFAULT_MAX7219_TOPIC_INVERT;
 	String max7219_topic_intensity = DEFAULT_MAX7219_TOPIC_INTENSITY;
 	String max7219_topic_alignment = DEFAULT_MAX7219_TOPIC_ALIGNMENT;
 	String max7219_topic_text = DEFAULT_MAX7219_TOPIC_TEXT;

@@ -13,8 +13,8 @@
 #define INCLUDE_APP_DEFAULTS_H_
 
 /* Version information (Note: had to be in this order to work properly at the moment) */
-#define VER_BUILD		734
-#define VER_MINOR		1
+#define VER_BUILD		740
+#define VER_MINOR		2
 #define VER_MAJOR		0
 
 /* Default Wifi Accesspoint Name for Setup */
@@ -90,6 +90,7 @@
 #define DEFAULT_MAX7219_COUNT 5
 #define DEFAULT_MAX7219_TEXT ""
 #define DEFAULT_MAX7219_ORIENTATION 1
+#define DEFAULT_MAX7219_INVERT 0
 #define DEFAULT_MAX7219_INTENSITY 7
 #define DEFAULT_MAX7219_SPEED 10
 #define DEFAULT_MAX7219_ALIGNMENT PA_CENTER
@@ -101,6 +102,7 @@
 #define DEFAULT_MAX7219_TOPIC_SPEED "speed"
 #define DEFAULT_MAX7219_TOPIC_PAUSE "pause"
 #define DEFAULT_MAX7219_TOPIC_CHARWIDTH "charwidth"
+#define DEFAULT_MAX7219_TOPIC_INVERT "invert"
 #define DEFAULT_MAX7219_TOPIC_TEXT "text"
 #define DEFAULT_MAX7219_TOPIC_INTENSITY "intensity"
 #define DEFAULT_MAX7219_TOPIC_ALIGNMENT "alignment"

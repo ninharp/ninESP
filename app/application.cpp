@@ -262,6 +262,11 @@ void onMQTTMessageReceived(String topic, String message)
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_charwidth)) {
 			led->setCharSpacing(message.toInt());
 		}
+		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_invert)) {
+			led->displayReset();
+			displayAnim = true;
+			led->setInvert(message.toInt());
+		}
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_scroll)) {
 			scrollText = message.toInt();
 		}
@@ -812,7 +817,7 @@ void init()
 
 			led->displayClear();
 			led->setSpeed(AppSettings.max7219_speed);
-			led->displayText((char*)"Start", AppSettings.max7219_alignment, led->getSpeed(), led->getPause(), AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
+			led->displayText((char*)"", AppSettings.max7219_alignment, led->getSpeed(), led->getPause(), AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
 			while(led->displayAnimate());
 
 			//ledMatrixTimer.initializeMs(200, ledMatrixCb).start();
