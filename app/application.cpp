@@ -1,7 +1,8 @@
 #include <application.h>
 #include <webinterface.h>
-
 //#include <ota.h>
+
+class ninHOME;
 
 extern BssList wNetworks;
 extern String lastModified;
@@ -26,7 +27,9 @@ UdpConnection udp = UdpConnection(onReceiveUDP);
 RCSwitch rcSwitch = RCSwitch();
 RelaySwitch relay = RelaySwitch();
 
-MD_Parola led = MD_Parola(DEFAULT_MAX7219_SS_PIN, 7); //DEFAULT_MAX7219_COUNT);
+//MD_Parola led = MD_Parola(DEFAULT_MAX7219_SS_PIN, 7); //DEFAULT_MAX7219_COUNT);
+MD_Parola *led;
+
 
 // Sprite Definitions
 const uint8_t F_PMAN1 = 6;
@@ -73,6 +76,25 @@ Timer debounceTimer;
 bool key_pressed = false;
 long lastKeyPress = 0;
 Timer relayTimer;
+
+template<typename T>
+struct DefferedObject
+{
+    DefferedObject(){}
+    ~DefferedObject(){ value.~T(); }
+    template<typename...TArgs>
+    void Construct(TArgs&&...args)
+    {
+        new (&value) T(std::forward<TArgs>(args)...);
+    }
+public:
+    union
+    {
+        T value;
+    };
+};
+
+DefferedObject<MD_Parola> ledPtr;
 
 /* IRQ Callback for interrupt of key input */
 void IRAM_ATTR keyIRQHandler()
@@ -211,51 +233,51 @@ void onMQTTMessageReceived(String topic, String message)
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_text)) {
 			/*
 			if (scrollText) {
-				led.setNextText(message);
+				led->setNextText(message);
 			} else {
-				led.setText(message);
-				led.setNextText(message);
-				for (int i = 0; i < (message.length() * led.getCharWidth()); i++)
-					led.scrollTextLeft();
+				led->setText(message);
+				led->setNextText(message);
+				for (int i = 0; i < (message.length() * led->getCharWidth()); i++)
+					led->scrollTextLeft();
 			}
 			*/
 			AppSettings.max7219_text = message;
 			displayAnim = true;
-			led.displayReset();
-			//led.setTextBuffer((char*)AppSettings.max7219_text.c_str());
-			led.displayText((char*)AppSettings.max7219_text.c_str(), AppSettings.max7219_alignment, led.getSpeed(), led.getPause(), AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
-			Serial.printf("Displaying Text '%s' with align of %d speed (%d/%d)\r\n", AppSettings.max7219_text.c_str(), AppSettings.max7219_alignment, led.getSpeed(), led.getPause());
+			led->displayReset();
+			//led->setTextBuffer((char*)AppSettings.max7219_text.c_str());
+			led->displayText((char*)AppSettings.max7219_text.c_str(), AppSettings.max7219_alignment, led->getSpeed(), led->getPause(), AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
+			Serial.printf("Displaying Text '%s' with align of %d speed (%d/%d)\r\n", AppSettings.max7219_text.c_str(), AppSettings.max7219_alignment, led->getSpeed(), led->getPause());
 			Serial.printf("Effect In/Out %d/%d\r\n", AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
 		}
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_speed)) {
 			//ledMatrixTimer.setIntervalMs(message.toInt());
-			//led.displayReset();
-			led.setSpeed(message.toInt());
+			//led->displayReset();
+			led->setSpeed(message.toInt());
 		}
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_pause)) {
 			//ledMatrixTimer.setIntervalMs(message.toInt());
-			//led.displayReset();
-			led.setPause(message.toInt());
+			//led->displayReset();
+			led->setPause(message.toInt());
 		}
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_charwidth)) {
-			led.setCharSpacing(message.toInt());
+			led->setCharSpacing(message.toInt());
 		}
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_scroll)) {
 			scrollText = message.toInt();
 		}
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_intensity)) {
-			led.setIntensity(message.toInt());
+			led->setIntensity(message.toInt());
 		}
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_effect_in)) {
-			//led.displayReset();
+			//led->displayReset();
 			AppSettings.max7219_effect_in = (textEffect_t)message.toInt();
 		}
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_effect_out)) {
-			//led.displayReset();
+			//led->displayReset();
 			AppSettings.max7219_effect_out = (textEffect_t)message.toInt();
 		}
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_alignment)) {
-			//led.displayReset();
+			//led->displayReset();
 			AppSettings.max7219_alignment = (textPosition_t)message.toInt();
 		}
 	}
@@ -464,29 +486,33 @@ void ledMatrixCb()
 {
 	ledMatrixTimer.stop();
 
-	//led.displayClear();
+	//led->displayClear();
 
 	if (displayEnable) {
-		//led.commit(); // commit transfers the byte buffer to the displays
-		//led.displayText((char *)"Testing 1 2 3", PA_CENTER, led.getSpeed(), 200, PA_SLICE, PA_RANDOM);
-		//led.displayText((char*)AppSettings.max7219_text.c_str(), AppSettings.max7219_alignment, led.getSpeed(), led.getPause(), AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
+		//led->commit(); // commit transfers the byte buffer to the displays
+		//led->displayText((char *)"Testing 1 2 3", PA_CENTER, led->getSpeed(), 200, PA_SLICE, PA_RANDOM);
+		//led->displayText((char*)AppSettings.max7219_text.c_str(), AppSettings.max7219_alignment, led->getSpeed(), led->getPause(), AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
 
 		if (displayAnim) {
-			while(!led.displayAnimate()) {
+			/*while(!led->displayAnimate()) {
 				yield();
-			}
-			displayAnim = false;
+			}*/
+
+			displayAnim = !led->displayAnimate();
+
+			//displayAnim = false;
 		}
 
 		if (scrollText) {
-			led.displayText((char*)AppSettings.max7219_text.c_str(), AppSettings.max7219_alignment, led.getSpeed(), led.getPause(), AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
+			if (!led->displayAnimate())
+				led->displayText((char*)AppSettings.max7219_text.c_str(), AppSettings.max7219_alignment, led->getSpeed(), led->getPause(), AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
 			displayAnim = true;
 		}
-		//delay(led.getSpeed());
+		//delay(led->getSpeed());
 
 	} else {
-		//led.clear();
-		led.displayClear();
+		//led->clear();
+		led->displayClear();
 	}
 
 	ledMatrixTimer.restart();
@@ -535,6 +561,7 @@ void connectOk(IPAddress ip, IPAddress mask, IPAddress gateway)
 			}
 
 			if (AppSettings.max7219) {
+
 				ledMatrixTimer.initializeMs(5, ledMatrixCb).start();
 			}
 
@@ -771,21 +798,22 @@ void init()
 
 		if (AppSettings.max7219) {
 			debugf("Initialize MAX7219 LED Matrix x%d - SS Pin %d", AppSettings.max7219_count, AppSettings.max7219_ss_pin);
-			//led.init(AppSettings.max7219_count, AppSettings.max7219_ss_pin);
+			//led->init(AppSettings.max7219_count, AppSettings.max7219_ss_pin);
 			//TODO: Set SS Pin and Count to runtime
-			led.begin();
+			//led(AppSettings.max7219_ss_pin, AppSettings.max7219_count);
+			//led = new MD_Parola(4, AppSettings.max7219_count);
+			ledPtr.Construct(AppSettings.max7219_ss_pin, AppSettings.max7219_count);
+			led = &ledPtr.value;
+
+			led->begin();
 			#if ENA_SPRITE
-			led.setSpriteData(pacman1, W_PMAN1, F_PMAN1, pacman2, W_PMAN2, F_PMAN2);
+			led->setSpriteData(pacman1, W_PMAN1, F_PMAN1, pacman2, W_PMAN2, F_PMAN2);
 			#endif
 
-			//led.init(8, 4);
-			//led.setIntensity(DEFAULT_MAX7219_INTENSITY); // range is 0-15
-			//led.setText(DEFAULT_MAX7219_TEXT);
-
-			//led.clear();
-			led.displayClear();
-			led.setSpeed(AppSettings.max7219_speed);
-			//led.displayText((char*)"", AppSettings.max7219_alignment, led.getSpeed(), led.getPause(), AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
+			led->displayClear();
+			led->setSpeed(AppSettings.max7219_speed);
+			led->displayText((char*)"Start", AppSettings.max7219_alignment, led->getSpeed(), led->getPause(), AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
+			while(led->displayAnimate());
 
 			//ledMatrixTimer.initializeMs(200, ledMatrixCb).start();
 		}

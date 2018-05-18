@@ -1,1 +1,0 @@
-/home/michael/eagle/ninESP/ninesp.sch
