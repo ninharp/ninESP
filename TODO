@@ -1,21 +1,32 @@
 + Reset after change/set Network (automatically or triggered from webinterface)
+
 + Error checking in ajax web
+
 + Display of current settings and states (debug function already implemented [/dumpcfg])
+  + Maybe a mqtt topic which holds retained the whole settings? what about wifi password? or only the periph settings? 
+
 + Define UDP protocol
+
 + Change PIN setting in webinterface to dropdown
+
++ Main control commands missing on client/cmd topic
+
 + Implement log function which logs to specified topic and maybe a command to control loglevel. 
   on the main command topic for example
-  
- + MAX7219 lacks a configuration for orientation 
 
 + Define MQTT Topic Structure
 
 + Add more Peripheral "Modules"
 	+ Ultrasonic Sensor
     + other Display Outputs
+      + implement lcd over i2c completely (already in)
 
 + Split source to different files and make it modular to specifiy different types of clients
   + Namespaces, Classes, ... default MQTT Structure
+
++ Add file headers
+
++ Add license file
 
 + Make project comments doxygen compatible
 
@@ -24,5 +35,6 @@
 ISSUES
 ######
 
-Split setting disabling on settings.html, periph.html, ... (javascript)
-
++ Split setting disabling on settings.html, periph.html, ... (javascript)
++ Loading of mqtt settings are not properly
++ LWT does not work properly
