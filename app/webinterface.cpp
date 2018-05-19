@@ -25,7 +25,7 @@ String wNetwork, wPassword;
 /* Last modified string for webinterface */
 String lastModified;
 
-extern ninMqttClient mqtt;
+extern MqttClient *mqtt;
 
 void startWebServer();
 void startFTP();
@@ -277,7 +277,6 @@ void onMQTTConfig(HttpRequest &request, HttpResponse &response)
 	/* If values are passed from browser we will set here */
 	if (request.method == HTTP_POST)
 	{
-		mqtt.setEnabled(true);
 		AppSettings.mqtt_server = request.getPostParameter("server");
 		AppSettings.mqtt_port = request.getPostParameter("port").toInt();
 		AppSettings.mqtt_userid = request.getPostParameter("userid");
@@ -286,7 +285,6 @@ void onMQTTConfig(HttpRequest &request, HttpResponse &response)
 		AppSettings.mqtt_topic_lwt = request.getPostParameter("topic_lwt");
 		AppSettings.mqtt_topic_cmd = request.getPostParameter("topic_cmd");
 		AppSettings.mqtt_topic_pub = request.getPostParameter("topic_pub");
-		AppSettings.mqtt_enabled = mqtt.isEnabled();
 		//debugf("Updating MQTT settings: %d", AppSettings.mqtt_server.length());
 		AppSettings.saveMQTT();
 

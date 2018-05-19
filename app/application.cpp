@@ -14,11 +14,11 @@ void statusLed(bool state);
 void motionSensorCheck();
 
 // Set the LCD address to 0x27
-LiquidCrystal_I2C lcd(0x27);
+LiquidCrystal_I2C *lcd; //(0x27);
 
 /* MQTT client instance */
 /* For quickly check you can use: http://www.hivemq.com/demos/websocket-client/ (Connection= test.mosquitto.org:8080) */
-ninMqttClient mqtt(DEFAULT_MQTT_SERVER, DEFAULT_MQTT_PORT, false, onMQTTMessageReceived);
+MqttClient *mqtt; //(DEFAULT_MQTT_SERVER, DEFAULT_MQTT_PORT, onMQTTMessageReceived);
 
 /* UDP Connection instance */
 UdpConnection udp = UdpConnection(onReceiveUDP);
@@ -29,32 +29,6 @@ RelaySwitch relay = RelaySwitch();
 
 //MD_Parola led = MD_Parola(DEFAULT_MAX7219_SS_PIN, 7); //DEFAULT_MAX7219_COUNT);
 MD_Parola *led;
-
-
-// Sprite Definitions
-const uint8_t F_PMAN1 = 6;
-const uint8_t W_PMAN1 = 8;
-static uint8_t pacman1[F_PMAN1 * W_PMAN1] =  // gobbling pacman animation
-{
-  0x00, 0x81, 0xc3, 0xe7, 0xff, 0x7e, 0x7e, 0x3c,
-  0x00, 0x42, 0xe7, 0xe7, 0xff, 0xff, 0x7e, 0x3c,
-  0x24, 0x66, 0xe7, 0xff, 0xff, 0xff, 0x7e, 0x3c,
-  0x3c, 0x7e, 0xff, 0xff, 0xff, 0xff, 0x7e, 0x3c,
-  0x24, 0x66, 0xe7, 0xff, 0xff, 0xff, 0x7e, 0x3c,
-  0x00, 0x42, 0xe7, 0xe7, 0xff, 0xff, 0x7e, 0x3c,
-};
-
-const uint8_t F_PMAN2 = 6;
-const uint8_t W_PMAN2 = 18;
-static uint8_t pacman2[F_PMAN2 * W_PMAN2] =  // ghost pursued by a pacman
-{
-  0x00, 0x81, 0xc3, 0xe7, 0xff, 0x7e, 0x7e, 0x3c, 0x00, 0x00, 0x00, 0xfe, 0x7b, 0xf3, 0x7f, 0xfb, 0x73, 0xfe,
-  0x00, 0x42, 0xe7, 0xe7, 0xff, 0xff, 0x7e, 0x3c, 0x00, 0x00, 0x00, 0xfe, 0x7b, 0xf3, 0x7f, 0xfb, 0x73, 0xfe,
-  0x24, 0x66, 0xe7, 0xff, 0xff, 0xff, 0x7e, 0x3c, 0x00, 0x00, 0x00, 0xfe, 0x7b, 0xf3, 0x7f, 0xfb, 0x73, 0xfe,
-  0x3c, 0x7e, 0xff, 0xff, 0xff, 0xff, 0x7e, 0x3c, 0x00, 0x00, 0x00, 0xfe, 0x73, 0xfb, 0x7f, 0xf3, 0x7b, 0xfe,
-  0x24, 0x66, 0xe7, 0xff, 0xff, 0xff, 0x7e, 0x3c, 0x00, 0x00, 0x00, 0xfe, 0x73, 0xfb, 0x7f, 0xf3, 0x7b, 0xfe,
-  0x00, 0x42, 0xe7, 0xe7, 0xff, 0xff, 0x7e, 0x3c, 0x00, 0x00, 0x00, 0xfe, 0x73, 0xfb, 0x7f, 0xf3, 0x7b, 0xfe,
-};
 
 /* Timer for MAX7219 LED Matrix */
 bool scrollText = true;
@@ -77,24 +51,9 @@ bool key_pressed = false;
 long lastKeyPress = 0;
 Timer relayTimer;
 
-template<typename T>
-struct DefferedObject
-{
-    DefferedObject(){}
-    ~DefferedObject(){ value.~T(); }
-    template<typename...TArgs>
-    void Construct(TArgs&&...args)
-    {
-        new (&value) T(std::forward<TArgs>(args)...);
-    }
-public:
-    union
-    {
-        T value;
-    };
-};
-
 DefferedObject<MD_Parola> ledPtr;
+DefferedObject<MqttClient> mqttPtr;
+DefferedObject<LiquidCrystal_I2C> lcdPtr;
 
 /* IRQ Callback for interrupt of key input */
 void IRAM_ATTR keyIRQHandler()
@@ -122,13 +81,13 @@ void serialShowInfo() {
     Serial.printf("CPU Frequency: %d MHz\r\n", system_get_cpu_freq());
     Serial.printf("System Chip ID: %x\r\n", system_get_chip_id());
     Serial.printf("SPI Flash ID: %x\r\n", spi_flash_get_id());
-    //Serial.printf("SPI Flash Size: %d\r\n", (1 << ((spi_flash_get_id() >> 16) & 0xff)));
+    Serial.printf("SPI Flash Size: %d\r\n", (1 << ((spi_flash_get_id() >> 16) & 0xff)));
 }
 
 void relayTimerCb()
 {
 	relay.set(false);
-	mqtt.publish(AppSettings.relay_topic_pub, "0", true);
+	mqtt->publish(AppSettings.relay_topic_pub, "0", true);
 }
 
 /* Callback for UDP Receiving */
@@ -141,7 +100,7 @@ void onReceiveUDP(UdpConnection& connection, char *data, int size, IPAddress rem
 			//debugf("UDP Relay %c", data[2]);
 			uint8_t state = String(data[2]).toInt();
 			relay.set(state);
-			mqtt.publish(AppSettings.relay_topic_pub, String(data[2]), true);
+			mqtt->publish(AppSettings.relay_topic_pub, String(data[2]), true);
 			String ret = WifiStation.getMAC() + "," + data[0] + "," + WifiStation.getIP().toString() + "," + data[0] + "," + data[2];
 			udp.sendStringTo(remoteIP, remotePort, ret);
 			remoteIP[3] = 255;
@@ -161,7 +120,7 @@ void onReceiveUDP(UdpConnection& connection, char *data, int size, IPAddress rem
 				relay.set(true);
 				relayTimer.initializeMs(ms.toInt(), relayTimerCb).startOnce();
 				//debugf("UDP Relay Timer %d ms", ms.toInt());
-				mqtt.publish(AppSettings.relay_topic_pub, "0", true);
+				mqtt->publish(AppSettings.relay_topic_pub, "0", true);
 				String ret = WifiStation.getMAC() + "," + data[0] + "," + WifiStation.getIP().toString() + "," + data[0] + "," + ms.toInt();
 				udp.sendStringTo(remoteIP, remotePort, ret);
 			}
@@ -185,21 +144,21 @@ void onMQTTMessageReceived(String topic, String message)
 			/* Set relay to on */
 			relay.set(true);
 			/* Check mqtt connection status */
-			//if (mqtt.getConnectionState() != eTCS_Connected)
+			//if (mqtt->getConnectionState() != eTCS_Connected)
 			//	startMqttClient(); // Auto reconnect
 
 			/* Publish current relay state */
-			mqtt.publish(AppSettings.relay_topic_pub, "1", true);
+			mqtt->publish(AppSettings.relay_topic_pub, "1", true);
 		} else if (message.equals("off") || message.equals("0")) { // Relay OFF
 			/* Set relay to off */
 			relay.set(false);
 			/* Check mqtt connection status */
-			//if (mqtt.getConnectionState() != eTCS_Connected)
+			//if (mqtt->getConnectionState() != eTCS_Connected)
 			//	startMqttClient(); // Auto reconnect
 
 			/* Publish current relay state */
 			//TODO problem?
-			mqtt.publish(AppSettings.relay_topic_pub, "0", true);
+			mqtt->publish(AppSettings.relay_topic_pub, "0", true);
 		}
 	}
 
@@ -299,11 +258,11 @@ void sensorPublish()
 		/* If publishing of ADC Values is enabled, then publish */
 		if (AppSettings.adc_pub) {
 			/* Check mqtt connection status */
-			if (mqtt.getConnectionState() != eTCS_Connected)
+			if (mqtt->getConnectionState() != eTCS_Connected)
 				startMqttClient(); // Auto reconnect
 
 			/* Publish mqtt adc value */
-			mqtt.publish(AppSettings.adc_topic, String(a), true);
+			mqtt->publish(AppSettings.adc_topic, String(a), true);
 			//debugf("sensorPublish() ADC published");
 		}
 	}
@@ -312,65 +271,63 @@ void sensorPublish()
 /* Start MQTT client and publish/subscribe to the used services */
 void startMqttClient()
 {
-	//if (mqtt.isEnabled()) { // if WifiStation.isConnected() .... TODO
-		mqtt.setEnabled(true); //TODO
-		/* Set LWT message and topic */
-		if(!mqtt.setWill(AppSettings.mqtt_topic_lwt, "offline", 2, true)) {
-			debugf("Unable to set the last will and testament. Most probably there is not enough memory on the device.");
+	mqttPtr.Construct(AppSettings.mqtt_server, AppSettings.mqtt_port, onMQTTMessageReceived);
+	mqtt = &mqttPtr.value;
+
+	//mqtt->setEnabled(true); //TODO
+	/* Set LWT message and topic */
+	if(!mqtt->setWill(AppSettings.mqtt_topic_lwt, "offline", 2, true)) {
+		debugf("Unable to set the last will and testament. Most probably there is not enough memory on the device.");
+	} else {
+		debugf("MQTT LWT set");
+	}
+
+	mqtt->connect(AppSettings.mqtt_userid, AppSettings.mqtt_login, AppSettings.mqtt_password);
+
+	/* Subscribe to client command topic for general commands */
+	mqtt->subscribe(AppSettings.mqtt_topic_cmd);
+
+	/* Publish LWT message */
+	mqtt->publishWithQoS(AppSettings.mqtt_topic_lwt, WifiStation.getIP().toString(), 1, true);
+
+	/* If relay is attached and enabled in settings */
+	if (AppSettings.relay) {
+		/* Publish current relay state to mqtt */
+		mqtt->publish(AppSettings.relay_topic_pub, String(relay.get()), true);
+		//TODO: Add relay config key, key_pin, relay_pin, ...
+		/* Attach interrupt if enabled in config */
+		//attachInterrupt(KEY_INPUT_PIN, keyIRQHandler, CHANGE);
+		/* Check if set topics are at least 1 byte long */
+		if ((AppSettings.relay_topic_cmd.length() >= 1) && (AppSettings.relay_topic_pub.length() >= 1)) {
+			/* Check if topic backup is set */
+			//if (AppSettings.relay_topic_cmd_old.length() > 0)
+			//	mqtt->unsubscribe(AppSettings.relay_topic_cmd_old); /* Unsubscribe backup relay topic, for changes in webinterface */
+			mqtt->subscribe(AppSettings.relay_topic_cmd); /* Resubscribe relay topic */
+			/* Set backup relay topic to current relay topic */
+			AppSettings.relay_topic_cmd_old = AppSettings.relay_topic_cmd;
 		} else {
-			debugf("MQTT LWT set");
+			// TODO: show error for to short relay topics with ajax
 		}
+	}
 
-		/* Populate MQTT Settings from configuration */
-		mqtt.setHost(AppSettings.mqtt_server);
-		mqtt.setPort(AppSettings.mqtt_port);
-		mqtt.connect(AppSettings.mqtt_userid, AppSettings.mqtt_login, AppSettings.mqtt_password);
+	if (AppSettings.rcswitch) {
+		//TODO: Check if topic prefix got already trailing / and/or #
+		mqtt->subscribe(AppSettings.rcswitch_topic_prefix + "#");
+		rcSwitch.enableTransmit(AppSettings.rcswitch_pin);
+	} else {
+		//mqtt->unsubscribe(AppSettings.rcswitch_topic_prefix + "#");
+		rcSwitch.disableTransmit();
+	}
 
-		/* Subscribe to client command topic for general commands */
-		mqtt.subscribe(AppSettings.mqtt_topic_cmd);
-
-		/* Publish LWT message */
-		mqtt.publishWithQoS(AppSettings.mqtt_topic_lwt, WifiStation.getIP().toString(), 1, true);
-
-		/* If relay is attached and enabled in settings */
-		if (AppSettings.relay) {
-			/* Publish current relay state to mqtt */
-			mqtt.publish(AppSettings.relay_topic_pub, String(relay.get()), true);
-			//TODO: Add relay config key, key_pin, relay_pin, ...
-			/* Attach interrupt if enabled in config */
-			//attachInterrupt(KEY_INPUT_PIN, keyIRQHandler, CHANGE);
-			/* Check if set topics are at least 1 byte long */
-			if ((AppSettings.relay_topic_cmd.length() >= 1) && (AppSettings.relay_topic_pub.length() >= 1)) {
-				/* Check if topic backup is set */
-				//if (AppSettings.relay_topic_cmd_old.length() > 0)
-				//	mqtt.unsubscribe(AppSettings.relay_topic_cmd_old); /* Unsubscribe backup relay topic, for changes in webinterface */
-				mqtt.subscribe(AppSettings.relay_topic_cmd); /* Resubscribe relay topic */
-				/* Set backup relay topic to current relay topic */
-				AppSettings.relay_topic_cmd_old = AppSettings.relay_topic_cmd;
-			} else {
-				// TODO: show error for to short relay topics with ajax
-			}
-		}
-
-		if (AppSettings.rcswitch) {
-			//TODO: Check if topic prefix got already trailing / and/or #
-			mqtt.subscribe(AppSettings.rcswitch_topic_prefix + "#");
-			rcSwitch.enableTransmit(AppSettings.rcswitch_pin);
-		} else {
-			//mqtt.unsubscribe(AppSettings.rcswitch_topic_prefix + "#");
-			rcSwitch.disableTransmit();
-		}
-
-		if (AppSettings.max7219) {
-			mqtt.subscribe(AppSettings.max7219_topic_prefix + "#");
-			/*mqtt.subscribe(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_enable);
-			mqtt.subscribe(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_text);
-			mqtt.subscribe(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_charwidth);
-			mqtt.subscribe(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_speed);
-			mqtt.subscribe(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_scroll);
-			mqtt.subscribe(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_intensity);*/
-		}
-	//}
+	if (AppSettings.max7219) {
+		mqtt->subscribe(AppSettings.max7219_topic_prefix + "#");
+		/*mqtt->subscribe(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_enable);
+		mqtt->subscribe(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_text);
+		mqtt->subscribe(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_charwidth);
+		mqtt->subscribe(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_speed);
+		mqtt->subscribe(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_scroll);
+		mqtt->subscribe(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_intensity);*/
+	}
 }
 
 /* Start used services for connected peripherals */
@@ -389,7 +346,7 @@ void startServices()
 void checkMQTTConnection()
 {
 	/* Check if MQTT Connection is still alive */
-	if (mqtt.getConnectionState() != eTCS_Connected)
+	if (mqtt->getConnectionState() != eTCS_Connected)
 		startMqttClient(); /* Auto reconnect */
 }
 
@@ -460,9 +417,9 @@ void debounceKey()
 
 		if (key_pressed) {
 			relay.set(!relay.get()); // toggle relay
-			if (mqtt.getConnectionState() != eTCS_Connected) //TODO
+			if (mqtt->getConnectionState() != eTCS_Connected) //TODO
 				startMqttClient(); // Auto reconnect
-			mqtt.publish(AppSettings.relay_topic_pub, String(relay.get()), true); // send actual state to broker
+			mqtt->publish(AppSettings.relay_topic_pub, String(relay.get()), true); // send actual state to broker
 			lastKeyPress = millis(); // reset last key press millis
 			key_pressed = false; // reset key_pressed value
 			interrupts(); // re-enable the interrupts
@@ -532,15 +489,11 @@ void connectOk(IPAddress ip, IPAddress mask, IPAddress gateway)
 
 	if (AppSettings.existMQTT()) {
 		AppSettings.loadMQTT();
-		mqtt.setEnabled(AppSettings.mqtt_enabled);
+		//mqtt->setEnabled(AppSettings.mqtt_enabled);
 
 		/* Start MQTT client and publish/subscribe used extensions */
-		//if (mqtt.isEnabled()) {
 		debugf("Starting MQTT Client");
 		startMqttClient();
-		//} else {
-		//	debugf("MQTT still disabled, update settings!");
-		//}
 
 		//TODO: Is another load of peripheral settings necessary?
 		/* Load peripheral settings */
@@ -566,7 +519,6 @@ void connectOk(IPAddress ip, IPAddress mask, IPAddress gateway)
 			}
 
 			if (AppSettings.max7219) {
-
 				ledMatrixTimer.initializeMs(5, ledMatrixCb).start();
 			}
 
@@ -628,18 +580,18 @@ void motionSensorCheck()
 	if (digitalRead(AppSettings.motion_pin) == AppSettings.motion_invert) {
 		if (motionState != true) {
 			motionState = true;
-			if (mqtt.getConnectionState() != eTCS_Connected) //TODO remove autoconnect cause of connCheck timer?
+			if (mqtt->getConnectionState() != eTCS_Connected) //TODO remove autoconnect cause of connCheck timer?
 						startMqttClient(); // Auto reconnect
-			mqtt.publishWithQoS(AppSettings.motion_topic, "1", 1, true);
+			mqtt->publishWithQoS(AppSettings.motion_topic, "1", 1, true);
 			debugf("Motion ON (%s)", AppSettings.motion_topic.c_str());
 		}
 		//digitalWrite(14, 1);
 	} else {
 		if (motionState != false) {
 			motionState = false;
-			if (mqtt.getConnectionState() != eTCS_Connected)
+			if (mqtt->getConnectionState() != eTCS_Connected)
 						startMqttClient(); // Auto reconnect
-			mqtt.publishWithQoS(AppSettings.motion_topic, "0", 1, true);
+			mqtt->publishWithQoS(AppSettings.motion_topic, "0", 1, true);
 			debugf("Motion OFF (%s)", AppSettings.motion_topic.c_str());
 		}
 		//digitalWrite(14, 0);
@@ -812,7 +764,7 @@ void init()
 
 			led->begin();
 			#if ENA_SPRITE
-			led->setSpriteData(pacman1, W_PMAN1, F_PMAN1, pacman2, W_PMAN2, F_PMAN2);
+			led->setSpriteData(sprite_in, W_SPRITE1, F_SPRITE1, sprite_out, W_SPRITE2, F_SPRITE2);
 			#endif
 
 			led->displayClear();
