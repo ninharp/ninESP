@@ -15,6 +15,8 @@ which you can connect from any Wifi enabled device and then connect with a webbr
 to "http://192.168.4.1" to get into the webinterface.
 There you can first configure the Wifi it should connect to, the mqtt settings and the 
 connected periphals and the corresponding mqtt topics.
+After you configured your ninESP you can find the current IP Address on the defined LWT MQTT 
+Topic when the client is online, if it disconnects it will just say "Offline" in the LWT Topic.
 
 In Version 0.2 the library for the MAX7219 control changed to a more modern and flexible
 library which can do a lot of more animations. 
@@ -35,11 +37,25 @@ Any contribution is very warm welcome...
 
 # Peripheral Modules
 
-In this list you see the peripheral modules which are currently build in or in development state
+Peripheral modules which are currently build in or in development state
+
+<table border="1" align="center" width="80%">
+<tr><th>Periphery</th><th>Working state</th></tr>
+<tr><td>Status LED on any free GPIO</td><td><font color="#11ff55"><b>working</b></font></td></tr>
+<tr><td>Relay Module on any free GPIO<br>with optional Hardware switch support</td><td><font color="#11ff55"><b>working</b></font></td></tr>
+<tr><td>Status LED on any free GPIO</td><td><font color="#11ff55"><b>working</b></font></td></tr>
+<tr><td>One Analog Sensor on Pin A0<br>Reference Voltage of 3v3</td><td><font color="#11ff55"><b>working</b></font></td></tr>
+<tr><td>HC-SR501 Motion Sensor on any free GPIO</td><td><font color="#11ff55"><b>working</b></font></td></tr>
+<tr><td>MAX7219 LED Matrix<br></td><td><font color="#11ff55"><b>working</b></font><br>currently only with Hardware SPI Support</td></tr>
+<tr><td>RCSwitch Support for 868/433MHz Remote Plugs</td><td><font color="#ccddcc"><b>work in progress</b></font><br>configuration Webinterface missing, configuration currently in config file only</td></tr>
+<tr><td>HD44780 LCD Display over I2C</td><td><font color="#dd0000"><b>not fully implemented</b></font></td></tr>
+<tr><td>WS281x LED Strip Support</td><td><font color="#dd0000"><b>not fully implemented</b></font></td></tr>
+</table><br>
+
 
 # Known Working Boards/Chips
 
-Here you can find a list of development boards and chips which are known to work with ninESP firmware.
+Here you find a list of development boards and chips which are known to work with ninESP firmware.
 
 # Dependencies
 
@@ -51,6 +67,18 @@ As other submodules are the libraries of MajicDesigns included.
 
 ~~It uses a slightly modified version of the SmingFramework MQTTClient Class, cause i needed
 some small additions to that.~~
+
+# FAQ
+
+*Q. My MAX7219 Displays are mirrored or just displaying crap, what can i do?*
+A. Look in the MAX72XX Submodule folder and open the MAX72xx.h in edit mode and
+    search for the MAX7219 module settings. There you can change the type of module you got
+    and will hopefully fix the displaying issue.
+    
+*Q. The firmware want compile, it says "error: 'typedef' was ignored in this declaration"*
+A. Apply the MD_Parola.patch from the repositorys root folder. Or remove the "typedef" tag by yourself
+
+
 
 
 
