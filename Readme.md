@@ -1,7 +1,7 @@
 # Introduction
 
 ninESP is a modular firmware for ESP8266 SoC based on SmingFramework.
-It is designed to work with a few kinds of sensor which you can attach to it
+It is designed to work with a few kinds of sensors which you can attach to it
 and then it acts as an MQTT Client. So you can easily switch relays or simply as a
 relay server for RC Plugs (All RCSwitch compatible Plugs and Protocols) or just a
 timer based MQTT publish of sensor values. Also it can start an UDP Server to act/react
@@ -26,9 +26,7 @@ Since this version (0.2) your flash size has to be at least a 1M type.
 The firmware itself should be mostly compatible to the closed source firmware for the
 inwall esp8266 which you can buy on ebay.
 
-You can find the latest firmware version in a binary format in the [firmware.tar.gz](https://github.com/ninharp/ninESP/blob/master/firmware.tar.gz?raw=true)  file in the root of this repository
-
-Any contribution is very warm welcome...
+You can find the latest firmware version in a binary format in the firmware folder in the root of this repository
 
 # Screenshots
 
@@ -52,10 +50,22 @@ Peripheral modules which are currently build in or in development state
 <tr><td>WS281x LED Strip Support</td><td><font color="#dd0000"><b>not fully implemented</b></font></td></tr>
 </table><br>
 
-
 # Known Working Boards/Chips
 
-Here you find a list of development boards and chips which are known to work with ninESP firmware.
+Here you find a list of development boards and modules which are known to work with ninESP firmware.
+ESP-201 Modules will work but some of them are only manufactured with an 512k flash so it is too small
+for the ninESP firmware.
+
+<table border="1" align="center" width="80%">
+<tr><th>Board / Module</th><th>Working state</th></tr>
+<tr><td>WeMos D1 mini clone<br>
+<img src="https://raw.github.com/ninharp/ninESP/master/doc/boards/WEMOSD1c.jpg" alt="wemosd1"></td><td>works</td></tr>
+<tr><td>NodeMCU v0.9<br>
+<img src="https://raw.github.com/ninharp/ninESP/master/doc/boards/NodeMCU09.jpg" alt="nodemcu"></td><td>works</td></tr>
+<tr><td>ESP-201 Module<br>
+<img src="https://raw.github.com/ninharp/ninESP/master/doc/boards/ESP201.jpg" alt="esp-201">
+</td><td>work partially (need an 1M flash)</td></tr>
+</table><br>
 
 # Dependencies
 
@@ -68,6 +78,40 @@ As other submodules are the libraries of MajicDesigns included.
 ~~It uses a slightly modified version of the SmingFramework MQTTClient Class, cause i needed
 some small additions to that.~~
 
+# Serial Commands
+
+You can interact with the firmware via the serial terminal and a baudrate of 115200baud 
+
+<table border="1" align="center" width="80%">
+<tr><th>Command</th><th>Reply</th></tr>
+<tr><td>help</td><td>List of commands</td></tr>
+<tr><td>ip</td><td>Dumps the actual ip and mac adress of the module.<br>
+Example output:<pre>ip: 192.168.3.66 mac: ecfabc123458</pre></td></tr>
+<tr><td>restart</td><td>Restarts the module</td></tr>
+<tr><td>ls</td><td>Displays a list of files in the SPIFFS<br>
+Example output:<pre>filecount 13
+bootstrap-core.css.gz
+periph.html
+index.html
+.mqtt_settings.conf</pre></td></tr>
+<tr><td>info</td><td>Displays some system information<br>Example output:<pre>SDK: v1.5.2(80914727)
+Free Heap: 28048
+CPU Frequency: 80 MHz
+System Chip ID: 143bc8
+SPI Flash ID: 16405e
+SPI Flash Size: 4194304</pre></td></tr>
+</table><br>
+
+# Flashing to your board
+
+If you just want to flash the firmware without the compiling, you can take one of our binary releases from the firmware folder in the repository. 
+There are zip archives with the firmware files in it. 
+Its not one file builds so you have to flash it seperately. The flash addresses are the file names of the binaries.
+Except of the spiff rom, which had to be in this case on memory address *0x5A000*. 
+An example flashing command with esptool could look like this.
+
+```esptool.py -p /dev/ttyUSB0 -b 230400 write_flash -ff 40m -fm qio -fs 32m 0x00000 0x00000.bin 0xa000 0xa000.bin 0x5A000 spiff_rom.bin```
+
 # FAQ
 
 *Q. My MAX7219 Displays are mirrored or just displaying crap, what can i do?*
@@ -76,12 +120,17 @@ A. Look in the MAX72XX Submodule folder and open the MAX72xx.h in edit mode and
     and will hopefully fix the displaying issue.
     
 *Q. The firmware want compile, it says "error: 'typedef' was ignored in this declaration"*
-A. Apply the MD_Parola.patch from the repositorys root folder. Or remove the "typedef" tag by yourself
+A. Apply the MD_Parola.patch from the repositorys root folder.
+Or remove the "typedef" tag from MD_Parola.h by yourself
+
+*Q. Can i see or download the configuration files for later use?*
+A. You can see or download the configuration files in json format if you open
+http://YOUR_ESP_IP/dumpcfg?type=TYPE 
+and TYPE can be *mqtt*, *network* or *periph*
 
 
+*Last Edited on: Sonntag, 20. Mai 2018 01:40*
 
 
-
-Last Edited on: Samstag, 19. Mai 2018 01:24 
 
    
