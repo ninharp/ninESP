@@ -304,6 +304,8 @@ void onMQTTConfig(HttpRequest &request, HttpResponse &response)
 		AppSettings.saveMQTT();
 	}
 
+	AppSettings.loadMQTT();
+
 	TemplateFileStream *tmpl = new TemplateFileStream("mqtt.html");
 	auto &vars = tmpl->variables();
 
