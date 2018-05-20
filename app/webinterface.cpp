@@ -186,6 +186,7 @@ void onPeriphConfig(HttpRequest &request, HttpResponse &response)
 		AppSettings.max7219_topic_pause = request.getPostParameter("max7219_pause");
 		AppSettings.max7219_topic_effect_in = request.getPostParameter("max7219_ein");
 		AppSettings.max7219_topic_effect_out = request.getPostParameter("max7219_eout");
+		AppSettings.max7219_topic_reset = request.getPostParameter("max7219_reset");
 
 		/* Motion Sensor Settings */
 		AppSettings.motion = request.getPostParameter("motion").equals("on") ? true : false;
@@ -269,6 +270,7 @@ void onPeriphConfig(HttpRequest &request, HttpResponse &response)
 	vars["max7219_pause"] = AppSettings.max7219_topic_pause;
 	vars["max7219_ein"] = AppSettings.max7219_topic_effect_in;
 	vars["max7219_eout"] = AppSettings.max7219_topic_effect_out;
+	vars["max7219_reset"] = AppSettings.max7219_topic_reset;
 
 	/* Motion Sensor Settings */
 	vars["motion_on"] = AppSettings.motion ? checked_str : "";

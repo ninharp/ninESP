@@ -39,9 +39,10 @@ RCSwitch rcSwitch = RCSwitch();
 RelaySwitch relay = RelaySwitch();
 
 /* Timer for MAX7219 LED Matrix */
-bool scrollText = true;
+bool displayScroll = true;
 bool displayEnable = true;
 bool displayAnim = true;
+bool displayReset = true;
 Timer ledMatrixTimer;
 
 /* Timer to check for connection */
@@ -203,33 +204,33 @@ void onMQTTMessageReceived(String topic, String message)
 			led->displayReset();
 			led->setTextBuffer((char*)AppSettings.max7219_text.c_str());
 			//led->displayText((char*)AppSettings.max7219_text.c_str(), AppSettings.max7219_alignment, led->getSpeed(), led->getPause(), AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
-			Serial.printf("Displaying %s Text '%s' with align of %d speed (%d/%d)\r\n", scrollText ? "Scroll" : "Static", AppSettings.max7219_text.c_str(), AppSettings.max7219_alignment, led->getSpeed(), led->getPause());
+			Serial.printf("Displaying %s Text '%s' with align of %d speed (%d/%d)\r\n", displayScroll ? "Scroll" : "Static", AppSettings.max7219_text.c_str(), AppSettings.max7219_alignment, led->getSpeed(), led->getPause());
 			Serial.printf("Text Effect In/Out %d/%d\r\n", AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
 		}
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_speed)) {
 			//ledMatrixTimer.setIntervalMs(message.toInt());
 			//led->displayReset();
 			led->setSpeed(message.toInt());
-			led->displayReset();
+			if (displayReset) led->displayReset();
 		}
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_pause)) {
 			//ledMatrixTimer.setIntervalMs(message.toInt());
 			led->setPause(message.toInt());
-			led->displayReset();
+			if (displayReset) led->displayReset();
 		}
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_charwidth)) {
 			led->setCharSpacing(message.toInt());
-			led->displayReset();
+			if (displayReset) led->displayReset();
 		}
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_invert)) {
 			displayAnim = true;
 			led->setInvert(message.toInt());
-			led->displayReset();
+			if (displayReset) led->displayReset();
 		}
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_scroll)) {
 			displayAnim = true;
-			scrollText = message.toInt();
-			led->displayReset();
+			displayScroll = message.toInt();
+			if (displayReset) led->displayReset();
 		}
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_intensity)) {
 			led->setIntensity(message.toInt());
@@ -238,19 +239,23 @@ void onMQTTMessageReceived(String topic, String message)
 			displayAnim = true;
 			AppSettings.max7219_effect_in = (textEffect_t)message.toInt();
 			led->setTextEffect(AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
-			led->displayReset();
+			if (displayReset) led->displayReset();
 		}
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_effect_out)) {
 			displayAnim = true;
 			AppSettings.max7219_effect_out = (textEffect_t)message.toInt();
 			led->setTextEffect(AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
-			led->displayReset();
+			if (displayReset) led->displayReset();
 		}
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_alignment)) {
 			displayAnim = true;
 			AppSettings.max7219_alignment = (textPosition_t)message.toInt();
 			led->setTextAlignment(AppSettings.max7219_alignment);
-			led->displayReset();
+			if (displayReset) led->displayReset();
+		}
+		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_reset)) {
+			displayReset = (bool)message.toInt();
+			Serial.printf("Display Reset set to %d", displayReset);
 		}
 	}
 }
@@ -458,7 +463,7 @@ void ledMatrixCb()
 
 	if (displayEnable) {
 		if (displayAnim && led->displayAnimate()) {
-			if (scrollText) {
+			if (displayScroll) {
 				led->displayText((char*)AppSettings.max7219_text.c_str(), AppSettings.max7219_alignment, led->getSpeed(), led->getPause(), AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
 				displayAnim = true;
 			}

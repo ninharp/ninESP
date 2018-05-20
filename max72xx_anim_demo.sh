@@ -7,8 +7,8 @@ MOSQUITTO_PUB=/usr/bin/mosquitto_pub
 
 DELAY=8
 
-MQTT_BROKER=192.168.8.177
-MQTT_USER=michael
+MQTT_BROKER=my.mqttbroker.com
+MQTT_USER=testuser
 MQTT_PASS=pass1234
 TEXT_TOPIC="client7/display/text"
 EFFECT_IN_TOPIC="client7/display/effectin"

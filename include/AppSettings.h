@@ -103,6 +103,7 @@ struct ApplicationSettingsStorage
 	String max7219_topic_pause = DEFAULT_MAX7219_TOPIC_PAUSE;
 	String max7219_topic_effect_in = DEFAULT_MAX7219_TOPIC_EFFECT_IN;
 	String max7219_topic_effect_out = DEFAULT_MAX7219_TOPIC_EFFECT_OUT;
+	String max7219_topic_reset = DEFAULT_MAX7219_TOPIC_RESET;
 
 	/* Motion Sensor Config */
 	bool motion = DEFAULT_MOTION_SENSOR;
@@ -253,6 +254,7 @@ struct ApplicationSettingsStorage
 				max7219_topic_pause = jmax7219["topic_pause"].asString();
 				max7219_topic_effect_in = jmax7219["topic_effect_in"].asString();
 				max7219_topic_effect_out = jmax7219["topic_effect_out"].asString();
+				max7219_topic_reset = jmax7219["topic_reset"].asString();
 			}
 			/* uint8_t max7219_orientation = DEFAULT_MAX7219_ORIENTATION; */
 
@@ -386,6 +388,7 @@ struct ApplicationSettingsStorage
 		jmax7219["topic_pause"] = max7219_topic_pause;
 		jmax7219["topic_effect_in"] = max7219_topic_effect_in;
 		jmax7219["topic_effect_out"] = max7219_topic_effect_out;
+		jmax7219["topic_reset"] = max7219_topic_reset;
 		periph["max7219"] = jmax7219;
 
 		jmotion["enabled"] = motion;
