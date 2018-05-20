@@ -1,8 +1,11 @@
-/*
- * RelaySwitch.h
+/**
+ * Project: ninHOME_Node
+ * @file RelaySwitch.h
+ * @author Michael Sauer <sauer.uetersen@gmail.com>
+ * @date 30.11.2017
  *
- *  Created on: 30.11.2017
- *      Author: Michael Sauer
+ * RelaySwitch Class declaration
+ *
  */
 
 #include <SmingCore/SmingCore.h>

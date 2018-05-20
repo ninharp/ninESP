@@ -1,9 +1,13 @@
-/*
- * webinterface.cpp
+/**
+ * Project: ninHOME_Node
+ * @file webinterface.cpp
+ * @author Michael Sauer <sauer.uetersen@gmail.com>
+ * @date 30.11.2017
  *
- *  Created on: 21.12.2017
- *      Author: michael
+ * Webinterface dependend functions
+ *
  */
+
 #include "application.h"
 #include "webinterface.h"
 
@@ -177,6 +181,11 @@ void onPeriphConfig(HttpRequest &request, HttpResponse &response)
 		AppSettings.max7219_topic_speed = request.getPostParameter("max7219_speed");
 		AppSettings.max7219_topic_charwidth = request.getPostParameter("max7219_char");
 		AppSettings.max7219_topic_intensity = request.getPostParameter("max7219_int");
+		AppSettings.max7219_topic_invert = request.getPostParameter("max7219_inv");
+		AppSettings.max7219_topic_alignment = request.getPostParameter("max7219_align");
+		AppSettings.max7219_topic_pause = request.getPostParameter("max7219_pause");
+		AppSettings.max7219_topic_effect_in = request.getPostParameter("max7219_ein");
+		AppSettings.max7219_topic_effect_out = request.getPostParameter("max7219_eout");
 
 		/* Motion Sensor Settings */
 		AppSettings.motion = request.getPostParameter("motion").equals("on") ? true : false;
@@ -255,7 +264,13 @@ void onPeriphConfig(HttpRequest &request, HttpResponse &response)
 	vars["max7219_speed"] = AppSettings.max7219_topic_speed;
 	vars["max7219_char"] = AppSettings.max7219_topic_charwidth;
 	vars["max7219_int"] = AppSettings.max7219_topic_intensity;
+	vars["max7219_inv"] = AppSettings.max7219_topic_invert;
+	vars["max7219_align"] = AppSettings.max7219_topic_alignment;
+	vars["max7219_pause"] = AppSettings.max7219_topic_pause;
+	vars["max7219_ein"] = AppSettings.max7219_topic_effect_in;
+	vars["max7219_eout"] = AppSettings.max7219_topic_effect_out;
 
+	/* Motion Sensor Settings */
 	vars["motion_on"] = AppSettings.motion ? checked_str : "";
 	vars["motion_pin"] = AppSettings.motion_pin;
 	vars["motion_invert"] = AppSettings.motion_invert ? checked_str : "";
@@ -287,7 +302,6 @@ void onMQTTConfig(HttpRequest &request, HttpResponse &response)
 		AppSettings.mqtt_topic_pub = request.getPostParameter("topic_pub");
 		//debugf("Updating MQTT settings: %d", AppSettings.mqtt_server.length());
 		AppSettings.saveMQTT();
-
 	}
 
 	TemplateFileStream *tmpl = new TemplateFileStream("mqtt.html");

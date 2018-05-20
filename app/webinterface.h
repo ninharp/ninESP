@@ -1,8 +1,11 @@
-/*
- * webinterface.h
+/**
+ * Project: ninHOME_Node
+ * @file application.cpp
+ * @author Michael Sauer <sauer.uetersen@gmail.com>
+ * @date 30.11.2017
  *
- *  Created on: 21.12.2017
- *      Author: michael
+ * Public functions for webinterface
+ *
  */
 
 #ifndef APP_WEBINTERFACE_H_

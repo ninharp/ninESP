@@ -1,3 +1,13 @@
+/**
+ * Project: ninHOME_Node
+ * @file cp437font.h
+ * @author Michael Sauer <sauer.uetersen@gmail.com>
+ * @date 30.11.2017
+ *
+ * Font file for CP437
+ *
+ */
+
 #include <Arduino.h>
 // bit patterns for the CP437 font
 

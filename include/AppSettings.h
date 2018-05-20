@@ -381,7 +381,6 @@ struct ApplicationSettingsStorage
 		jmax7219["topic_speed"] = max7219_topic_speed;
 		jmax7219["topic_charwidth"] = max7219_topic_charwidth;
 		jmax7219["topic_intensity"] = max7219_topic_intensity;
-
 		jmax7219["topic_invert"] = max7219_topic_invert;
 		jmax7219["topic_alignment"] = max7219_topic_alignment;
 		jmax7219["topic_pause"] = max7219_topic_pause;

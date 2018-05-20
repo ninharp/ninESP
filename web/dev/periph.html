@@ -184,26 +184,50 @@
                 				 		MAX7219 LED Display Matrix
                 				 	</label>
                 				 </div>
-                				 <div>Note: It will be the Hardware SPI used, only the SS Pin is freely assignable</div><br/>
+                				 <div>Note: It will be the Hardware SPI used, only the SS Pin is freely assignable</div><br/>                		
                 				  <label>Slave Select Pin</label>
-	                          <input class="form-control" style="width: 50px" type="text" name="max7219_pin" value="{max7219_pin}">
+	                          <input class="form-control" style="width: 50px" type="text" name="max7219_pin" value="{max7219_pin}"><br/>
 	                          <label>Number of MAX7219 connected</label>
-	                          <input class="form-control" style="width: 50px" type="text" name="max7219_count" value="{max7219_count}">
+	                          <input class="form-control" style="width: 50px" type="text" name="max7219_count" value="{max7219_count}"><br/>
 	                          <label>Topic Prefix</label>
-	                          <input class="form-control" style="width: 250px" type="text" name="max7219_prefix" value="{max7219_prefix}">
-                             <label>Enable Topic</label>
-	                          <input class="form-control" style="width: 250px" type="text" name="max7219_enable" value="{max7219_enable}">
-	                          <label>Display Text Topic</label>
-	                          <input class="form-control" style="width: 250px" type="text" name="max7219_text" value="{max7219_text}">
-                             <label>Scrolling Topic</label>
-	                          <input class="form-control" style="width: 250px" type="text" name="max7219_scroll" value="{max7219_scroll}">
-	                          <label>Scrolling Speed Topic</label>
-	                          <input class="form-control" style="width: 250px" type="text" name="max7219_speed" value="{max7219_speed}">
-	                          <label>Charwidth Topic</label>
-	                          <input class="form-control" style="width: 250px" type="text" name="max7219_char" value="{max7219_char}">
-	                          <label>Intensity Topic</label>
-	                          <input class="form-control" style="width: 250px" type="text" name="max7219_int" value="{max7219_int}">
-	                          <br/>
+	                          <input class="form-control" style="width: 250px" type="text" name="max7219_prefix" value="{max7219_prefix}"><br/>
+	                          <table border="0">
+	                          <tr>
+	                          <td><label>Enable Topic</label>
+	                          <input class="form-control" style="width: 250px" type="text" name="max7219_enable" value="{max7219_enable}"></td>
+	                          <td><label>Display Text Topic</label>
+	                          <input class="form-control" style="width: 250px" type="text" name="max7219_text" value="{max7219_text}"></td>
+	                          </tr>                             	                         
+                             <tr>
+	                          <td><label>Scrolling Topic</label>
+	                          <input class="form-control" style="width: 250px" type="text" name="max7219_scroll" value="{max7219_scroll}"></td>
+	                          <td><label>Scrolling Speed Topic</label>
+	                          <input class="form-control" style="width: 250px" type="text" name="max7219_speed" value="{max7219_speed}"></td>
+	                          </tr>	                          
+	                          <tr>
+	                          <td><label>Charwidth Topic</label>
+	                          <input class="form-control" style="width: 250px" type="text" name="max7219_char" value="{max7219_char}"></td>
+	                          <td><label>Intensity Topic</label>
+	                          <input class="form-control" style="width: 250px" type="text" name="max7219_int" value="{max7219_int}"></td>
+	                          </tr>	                          
+	                          <tr>
+	                          <td><label>Invert Display Topic</label>
+	                          <input class="form-control" style="width: 250px" type="text" name="max7219_inv" value="{max7219_inv}"></td>
+	                          <td><label>Text Alignment Topic</label>
+	                          <input class="form-control" style="width: 250px" type="text" name="max7219_align" value="{max7219_align}"></td>
+	                          </tr>	                          
+	                          <tr>
+	                          <td> <label>Pause Time Topic</label>
+	                          <input class="form-control" style="width: 250px" type="text" name="max7219_pause" value="{max7219_pause}"></td>
+	                          <td><label>Effect In Topic</label>
+	                          <input class="form-control" style="width: 250px" type="text" name="max7219_ein" value="{max7219_ein}"></td>
+	                          </tr>	                          
+	                          <tr>
+	                          <td> <label>Effect Out Topic</label>
+	                          <input class="form-control" style="width: 250px" type="text" name="max7219_eout" value="{max7219_eout}"></td>
+	                          <td>&nbsp;</td>
+	                          </tr>	                          
+	                          </table>
                          </div>
                     </div>
                     <div class="col-md-offset-3">

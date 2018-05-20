@@ -1,8 +1,11 @@
-/*
- * ota.cpp
+/**
+ * Project: ninHOME_Node
+ * @file ota.cpp
+ * @author Michael Sauer <sauer.uetersen@gmail.com>
+ * @date 30.11.2017
  *
- *  Created on: 21.12.2017
- *      Author: michael
+ * OTA Firmware update functions
+ *
  */
 #include "application.h"
 #include <ota.h>

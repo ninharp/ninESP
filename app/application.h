@@ -1,8 +1,11 @@
-/*
- * application.h
+/**
+ * Project: ninHOME_Node
+ * @file application.cpp
+ * @author Michael Sauer <sauer.uetersen@gmail.com>
+ * @date 30.11.2017
  *
- *  Created on: 21.12.2017
- *      Author: michael
+ * This is the main header file which holds the global variables and includes
+ *
  */
 
 #ifndef APP_APPLICATION_H_

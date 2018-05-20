@@ -1,8 +1,11 @@
-/*
- * RelaySwitch.cpp
+/**
+ * Project: ninHOME_Node
+ * @file RelaySwitch.cpp
+ * @author Michael Sauer <sauer.uetersen@gmail.com>
+ * @date 30.11.2017
  *
- *  Created on: 30.11.2017
- *      Author: Michael Sauer
+ * Class file for RelaySwitch
+ *
  */
 
 #include "RelaySwitch.h"

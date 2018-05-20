@@ -1,8 +1,11 @@
-/*
- * sprites.h
+/**
+ * Project: ninHOME_Node
+ * @file sprites.h
+ * @author Michael Sauer <sauer.uetersen@gmail.com>
+ * @date 30.11.2017
  *
- *  Created on: 19.05.2018
- *      Author: michael
+ * Sprites for text effect PA_SPRITE
+ *
  */
 
 #ifndef APP_SPRITES_H_

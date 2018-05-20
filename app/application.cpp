@@ -1,3 +1,12 @@
+/**
+ * Project: ninHOME_Node
+ * @file application.cpp
+ * @author Michael Sauer <sauer.uetersen@gmail.com>
+ * @date 30.11.2017
+ *
+ * This is the main application file
+ *
+ */
 #include <application.h>
 #include <webinterface.h>
 //#include <ota.h>
@@ -13,6 +22,7 @@ void onReceiveUDP(UdpConnection& connection, char *data, int size, IPAddress rem
 void statusLed(bool state);
 void motionSensorCheck();
 
+/* LCD Display instance */
 // Set the LCD address to 0x27
 LiquidCrystal_I2C *lcd; //(0x27);
 

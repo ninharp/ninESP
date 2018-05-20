@@ -4,6 +4,8 @@
 
 + Display of current settings and states (debug function already implemented [/dumpcfg])
   + Maybe a mqtt topic which holds retained the whole settings? what about wifi password? or only the periph settings? 
+  
++ MAX72xx Zone settings
 
 + Define UDP protocol
 
@@ -24,12 +26,9 @@
 + Split source to different files and make it modular to specifiy different types of clients
   + Namespaces, Classes, ... default MQTT Structure
 
-+ Add file headers
-
 + Add license file
 
 + Make project comments doxygen compatible
-
 
 
 ISSUES
@@ -38,3 +37,4 @@ ISSUES
 + Split setting disabling on settings.html, periph.html, ... (javascript)
 + Loading of mqtt settings are not properly
 + LWT does not work properly
++ Restart of chip only work sometimes
