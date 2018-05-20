@@ -23,12 +23,13 @@ void statusLed(bool state);
 void motionSensorCheck();
 
 /* LCD Display instance */
-// Set the LCD address to 0x27
 LiquidCrystal_I2C *lcd; //(0x27);
 
 /* MQTT client instance */
-/* For quickly check you can use: http://www.hivemq.com/demos/websocket-client/ (Connection= test.mosquitto.org:8080) */
-MqttClient *mqtt; //(DEFAULT_MQTT_SERVER, DEFAULT_MQTT_PORT, onMQTTMessageReceived);
+MqttClient *mqtt;
+
+/* MD Parola/MAX72xx LED Matrix instance */
+MD_Parola *led;
 
 /* UDP Connection instance */
 UdpConnection udp = UdpConnection(onReceiveUDP);
@@ -36,9 +37,6 @@ UdpConnection udp = UdpConnection(onReceiveUDP);
 /* RelaySwitch and RCSwitch instance */
 RCSwitch rcSwitch = RCSwitch();
 RelaySwitch relay = RelaySwitch();
-
-//MD_Parola led = MD_Parola(DEFAULT_MAX7219_SS_PIN, 7); //DEFAULT_MAX7219_COUNT);
-MD_Parola *led;
 
 /* Timer for MAX7219 LED Matrix */
 bool scrollText = true;
@@ -200,59 +198,59 @@ void onMQTTMessageReceived(String topic, String message)
 			displayEnable = message.toInt();
 		}
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_text)) {
-			/*
-			if (scrollText) {
-				led->setNextText(message);
-			} else {
-				led->setText(message);
-				led->setNextText(message);
-				for (int i = 0; i < (message.length() * led->getCharWidth()); i++)
-					led->scrollTextLeft();
-			}
-			*/
 			AppSettings.max7219_text = message;
 			displayAnim = true;
 			led->displayReset();
-			//led->setTextBuffer((char*)AppSettings.max7219_text.c_str());
-			led->displayText((char*)AppSettings.max7219_text.c_str(), AppSettings.max7219_alignment, led->getSpeed(), led->getPause(), AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
-			Serial.printf("Displaying Text '%s' with align of %d speed (%d/%d)\r\n", AppSettings.max7219_text.c_str(), AppSettings.max7219_alignment, led->getSpeed(), led->getPause());
-			Serial.printf("Effect In/Out %d/%d\r\n", AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
+			led->setTextBuffer((char*)AppSettings.max7219_text.c_str());
+			//led->displayText((char*)AppSettings.max7219_text.c_str(), AppSettings.max7219_alignment, led->getSpeed(), led->getPause(), AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
+			Serial.printf("Displaying %s Text '%s' with align of %d speed (%d/%d)\r\n", scrollText ? "Scroll" : "Static", AppSettings.max7219_text.c_str(), AppSettings.max7219_alignment, led->getSpeed(), led->getPause());
+			Serial.printf("Text Effect In/Out %d/%d\r\n", AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
 		}
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_speed)) {
 			//ledMatrixTimer.setIntervalMs(message.toInt());
 			//led->displayReset();
 			led->setSpeed(message.toInt());
+			led->displayReset();
 		}
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_pause)) {
 			//ledMatrixTimer.setIntervalMs(message.toInt());
-			//led->displayReset();
 			led->setPause(message.toInt());
+			led->displayReset();
 		}
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_charwidth)) {
 			led->setCharSpacing(message.toInt());
+			led->displayReset();
 		}
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_invert)) {
-			led->displayReset();
 			displayAnim = true;
 			led->setInvert(message.toInt());
+			led->displayReset();
 		}
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_scroll)) {
+			displayAnim = true;
 			scrollText = message.toInt();
+			led->displayReset();
 		}
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_intensity)) {
 			led->setIntensity(message.toInt());
 		}
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_effect_in)) {
-			//led->displayReset();
+			displayAnim = true;
 			AppSettings.max7219_effect_in = (textEffect_t)message.toInt();
+			led->setTextEffect(AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
+			led->displayReset();
 		}
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_effect_out)) {
-			//led->displayReset();
+			displayAnim = true;
 			AppSettings.max7219_effect_out = (textEffect_t)message.toInt();
+			led->setTextEffect(AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
+			led->displayReset();
 		}
 		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_alignment)) {
-			//led->displayReset();
+			displayAnim = true;
 			AppSettings.max7219_alignment = (textPosition_t)message.toInt();
+			led->setTextAlignment(AppSettings.max7219_alignment);
+			led->displayReset();
 		}
 	}
 }
@@ -458,32 +456,14 @@ void ledMatrixCb()
 {
 	ledMatrixTimer.stop();
 
-	//led->displayClear();
-
 	if (displayEnable) {
-		//led->commit(); // commit transfers the byte buffer to the displays
-		//led->displayText((char *)"Testing 1 2 3", PA_CENTER, led->getSpeed(), 200, PA_SLICE, PA_RANDOM);
-		//led->displayText((char*)AppSettings.max7219_text.c_str(), AppSettings.max7219_alignment, led->getSpeed(), led->getPause(), AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
-
-		if (displayAnim) {
-			/*while(!led->displayAnimate()) {
-				yield();
-			}*/
-
-			displayAnim = !led->displayAnimate();
-
-			//displayAnim = false;
-		}
-
-		if (scrollText) {
-			if (!led->displayAnimate())
+		if (displayAnim && led->displayAnimate()) {
+			if (scrollText) {
 				led->displayText((char*)AppSettings.max7219_text.c_str(), AppSettings.max7219_alignment, led->getSpeed(), led->getPause(), AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
-			displayAnim = true;
+				displayAnim = true;
+			}
 		}
-		//delay(led->getSpeed());
-
 	} else {
-		//led->clear();
 		led->displayClear();
 	}
 

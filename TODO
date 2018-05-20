@@ -21,7 +21,7 @@
 + Add more Peripheral "Modules"
 	+ Ultrasonic Sensor
     + other Display Outputs
-      + implement lcd over i2c completely (already in)
+      + implement lcd over i2c completely (already in, but not fully implemented right now)
 
 + Split source to different files and make it modular to specifiy different types of clients
   + Namespaces, Classes, ... default MQTT Structure
@@ -29,6 +29,8 @@
 + Add license file
 
 + Make project comments doxygen compatible
+
++ Add documentation for the MQTT handling
 
 
 ISSUES
