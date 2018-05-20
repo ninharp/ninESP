@@ -248,6 +248,11 @@ struct ApplicationSettingsStorage
 				max7219_topic_speed = jmax7219["topic_speed"].asString();
 				max7219_topic_charwidth = jmax7219["topic_charwidth"].asString();
 				max7219_topic_intensity = jmax7219["topic_intensity"].asString();
+				max7219_topic_invert = jmax7219["topic_invert"].asString();
+				max7219_topic_alignment = 	jmax7219["topic_alignment"].asString();
+				max7219_topic_pause = jmax7219["topic_pause"].asString();
+				max7219_topic_effect_in = jmax7219["topic_effect_in"].asString();
+				max7219_topic_effect_out = jmax7219["topic_effect_out"].asString();
 			}
 			/* uint8_t max7219_orientation = DEFAULT_MAX7219_ORIENTATION; */
 
@@ -376,6 +381,12 @@ struct ApplicationSettingsStorage
 		jmax7219["topic_speed"] = max7219_topic_speed;
 		jmax7219["topic_charwidth"] = max7219_topic_charwidth;
 		jmax7219["topic_intensity"] = max7219_topic_intensity;
+
+		jmax7219["topic_invert"] = max7219_topic_invert;
+		jmax7219["topic_alignment"] = max7219_topic_alignment;
+		jmax7219["topic_pause"] = max7219_topic_pause;
+		jmax7219["topic_effect_in"] = max7219_topic_effect_in;
+		jmax7219["topic_effect_out"] = max7219_topic_effect_out;
 		periph["max7219"] = jmax7219;
 
 		jmotion["enabled"] = motion;
@@ -390,7 +401,13 @@ struct ApplicationSettingsStorage
 		fileSetContent(APP_PERIPH_SETTINGS_FILE, rootString);
 	}
 
-	bool existGlobal() { return fileExist(APP_GLOBAL_SETTINGS_FILE); }
+	bool existGlobal() {
+		if (!existNetwork()) return false;
+		if (!existPeriph()) return false;
+		if (!existMQTT()) return false;
+		return true;
+	}
+	bool existNetwork() { return fileExist(APP_GLOBAL_SETTINGS_FILE); }
 	bool existPeriph() { return fileExist(APP_PERIPH_SETTINGS_FILE); }
 	bool existMQTT() { return fileExist(APP_MQTT_SETTINGS_FILE); }
 };

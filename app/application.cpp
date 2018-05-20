@@ -636,9 +636,9 @@ void serialCb(Stream& stream, char arrivedChar, unsigned short availableCharsCou
 			Serial.println("available commands:");
 			Serial.println("  help - display this message");
 			Serial.println("  ip - show current ip address");
-			Serial.println("  connect - connect to wifi");
+			//Serial.println("  connect - connect to wifi");
 			Serial.println("  restart - restart the esp8266");
-			Serial.println("  ota - perform ota update, switch rom and reboot");
+			//Serial.println("  ota - perform ota update, switch rom and reboot");
 			Serial.println("  info - show esp8266 info");
 #ifndef DISABLE_SPIFFS
 			Serial.println("  ls - list files in spiffs");
@@ -719,10 +719,18 @@ void init()
   	WifiStation.startScan(networkScanCompleted);
 
 	/* Check if there is already an existing configuration for wifi network */
-	if (AppSettings.existGlobal())
+	if (AppSettings.existNetwork())
 	{
-		/* Load other configuration files */
-		AppSettings.loadAll();
+		/* Check if all config files are present */
+		if (AppSettings.existGlobal()) {
+			debugf("All Config files found!\r\n");
+			/* Load other configuration files */
+			AppSettings.loadAll();
+		} else { /* Create missing config files */
+			debugf("Some config files are missing. Creating templates");
+			if (!AppSettings.existMQTT()) AppSettings.saveMQTT();
+			if (!AppSettings.existPeriph()) AppSettings.savePeriph();
+		}
 
 		statusLed(false);
 
