@@ -13,8 +13,8 @@
 #define INCLUDE_APP_DEFAULTS_H_
 
 /* Version information (Note: had to be in this order to work properly at the moment) */
-#define VER_BUILD		121
-#define VER_MINOR		2
+#define VER_BUILD		7
+#define VER_MINOR		3
 #define VER_MAJOR		0
 
 /* Default Wifi Accesspoint Name for Setup */
@@ -108,5 +108,6 @@
 #define DEFAULT_MAX7219_TOPIC_ALIGNMENT "alignment"
 #define DEFAULT_MAX7219_TOPIC_EFFECT_IN "effectin"
 #define DEFAULT_MAX7219_TOPIC_EFFECT_OUT "effectout"
+#define DEFAULT_MAX7219_TOPIC_RESET "reset"
 
 #endif /* INCLUDE_APP_DEFAULTS_H_ */

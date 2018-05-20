@@ -178,6 +178,7 @@ You can use any mqtt client to interact with ninESP, for example an mobile andro
 <tr><td>28</td><td>Text grows from the top down and and shrinks from the bottom up</td></tr>
 </table></td></tr>
 <tr><td>Effect Out Topic</td><td>Default: <i>effectout (client/display/effectout)</i><br><br>Same list as in Effect in Topic description. For a static text use no effect (0)</td></tr>
+<tr><td>Reset Display Option Topic</td><td>Default: <i>reset (client/display/reset)</i><br><br>Reset Display animations on changing settings?<br>0 for disable<br>1 for enable (default)</td></tr>
 </table>
 
 # Serial Commands
@@ -233,7 +234,3 @@ and TYPE can be *mqtt*, *network* or *periph*
 
 
 *Last Edited on: Sonntag, 20. Mai 2018 01:40*
-
-
-
-   
