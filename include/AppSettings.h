@@ -20,6 +20,20 @@
 #define APP_PERIPH_SETTINGS_FILE ".periph_settings.conf"
 #define APP_MQTT_SETTINGS_FILE ".mqtt_settings.conf"
 
+struct max7219_display {
+	uint8_t size = DEFAULT_MAX7219_COUNT;
+	String text = DEFAULT_MAX7219_TEXT;
+	uint16_t speed = DEFAULT_MAX7219_SPEED;
+	uint16_t pause = DEFAULT_MAX7219_SPEED;
+	textEffect_t effect_in = DEFAULT_MAX7219_EFFECT_IN;
+	textEffect_t effect_out = DEFAULT_MAX7219_EFFECT_OUT;
+	textPosition_t alignment = DEFAULT_MAX7219_ALIGNMENT;
+	bool reset = true;
+	bool scroll = true;
+	bool anim = true;
+	bool enabled = true;
+};
+
 struct ApplicationSettingsStorage
 {
 	/* Network Config */
@@ -83,14 +97,17 @@ struct ApplicationSettingsStorage
 	/* MAX7219 Display Config */
 	bool max7219 = DEFAULT_MAX7219;
 	uint8_t max7219_count = DEFAULT_MAX7219_COUNT;
+	uint8_t max7219_zones = DEFAULT_MAX7219_ZONES;
+	struct max7219_display max7219_display[DEFAULT_MAX7219_MAXZONES];
 	int8_t max7219_ss_pin = DEFAULT_MAX7219_SS_PIN;
+	/*
 	String max7219_text = DEFAULT_MAX7219_TEXT;
 	uint16_t max7219_speed = DEFAULT_MAX7219_SPEED;
 	uint16_t max7219_pause = DEFAULT_MAX7219_SPEED;
 	textEffect_t max7219_effect_in = DEFAULT_MAX7219_EFFECT_IN;
 	textEffect_t max7219_effect_out = DEFAULT_MAX7219_EFFECT_OUT;
 	textPosition_t max7219_alignment = DEFAULT_MAX7219_ALIGNMENT;
-	uint8_t max7219_orientation = DEFAULT_MAX7219_ORIENTATION;
+	*/
 	String max7219_topic_prefix = DEFAULT_MAX7219_TOPIC_PREFIX;
 	String max7219_topic_enable = DEFAULT_MAX7219_TOPIC_ENABLE;
 	String max7219_topic_scroll = DEFAULT_MAX7219_TOPIC_SCROLL;
@@ -241,6 +258,11 @@ struct ApplicationSettingsStorage
 				JsonObject& jmax7219 = periph["max7219"];
 				max7219 = jmax7219["enabled"];
 				max7219_count = String(jmax7219["count"].asString()).toInt();
+				max7219_zones = String(jmax7219["zones"].asString()).toInt();
+				JsonObject& zone_sizes = jmax7219["zone_sizes"];
+				for (int i = 0; i < max7219_zones; i++) {
+					max7219_display[i].size = zone_sizes[String(i)];
+				}
 				max7219_ss_pin = String(jmax7219["pin"].asString()).toInt();
 				max7219_topic_prefix = jmax7219["topic_prefix"].asString();
 				max7219_topic_enable = jmax7219["topic_enable"].asString();
@@ -376,6 +398,12 @@ struct ApplicationSettingsStorage
 		jmax7219["enabled"] = max7219;
 		jmax7219["count"] = max7219_count;
 		jmax7219["pin"] = max7219_ss_pin;
+		jmax7219["zones"] = max7219_zones;
+		JsonObject& zone_sizes = jsonBuffer.createObject();
+		jmax7219["zone_sizes"] = zone_sizes;
+		for (int i = 0; i < rcswitch_count; i++) {
+			zone_sizes[String(i)] = String(max7219_display[i].size);
+		}
 		jmax7219["topic_prefix"] = max7219_topic_prefix;
 		jmax7219["topic_enable"] = max7219_topic_enable;
 		jmax7219["topic_text"] = max7219_topic_text;

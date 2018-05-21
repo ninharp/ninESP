@@ -21,6 +21,7 @@ void startMqttClient();
 void onReceiveUDP(UdpConnection& connection, char *data, int size, IPAddress remoteIP, uint16_t remotePort);
 void statusLed(bool state);
 void motionSensorCheck();
+int splitString(String &what, int delim,  String *splits);
 
 /* LCD Display instance */
 LiquidCrystal_I2C *lcd; //(0x27);
@@ -39,10 +40,10 @@ RCSwitch rcSwitch = RCSwitch();
 RelaySwitch relay = RelaySwitch();
 
 /* Timer for MAX7219 LED Matrix */
-bool displayScroll = true;
-bool displayEnable = true;
-bool displayAnim = true;
-bool displayReset = true;
+//bool displayScroll = true;
+//bool displayEnable = true;
+//bool displayAnim = true;
+//bool displayReset = true;
 Timer ledMatrixTimer;
 
 /* Timer to check for connection */
@@ -195,67 +196,80 @@ void onMQTTMessageReceived(String topic, String message)
 
 	/* MAX7219 Display */
 	if (AppSettings.max7219 && topic.startsWith(AppSettings.max7219_topic_prefix)) {
-		if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_enable)) {
-			displayEnable = message.toInt();
-		}
-		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_text)) {
-			AppSettings.max7219_text = message;
-			displayAnim = true;
-			led->displayReset();
-			led->setTextBuffer((char*)AppSettings.max7219_text.c_str());
-			//led->displayText((char*)AppSettings.max7219_text.c_str(), AppSettings.max7219_alignment, led->getSpeed(), led->getPause(), AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
-			Serial.printf("Displaying %s Text '%s' with align of %d speed (%d/%d)\r\n", displayScroll ? "Scroll" : "Static", AppSettings.max7219_text.c_str(), AppSettings.max7219_alignment, led->getSpeed(), led->getPause());
-			Serial.printf("Text Effect In/Out %d/%d\r\n", AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
-		}
-		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_speed)) {
-			//ledMatrixTimer.setIntervalMs(message.toInt());
-			//led->displayReset();
-			led->setSpeed(message.toInt());
-			if (displayReset) led->displayReset();
-		}
-		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_pause)) {
-			//ledMatrixTimer.setIntervalMs(message.toInt());
-			led->setPause(message.toInt());
-			if (displayReset) led->displayReset();
-		}
-		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_charwidth)) {
-			led->setCharSpacing(message.toInt());
-			if (displayReset) led->displayReset();
-		}
-		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_invert)) {
-			displayAnim = true;
-			led->setInvert(message.toInt());
-			if (displayReset) led->displayReset();
-		}
-		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_scroll)) {
-			displayAnim = true;
-			displayScroll = message.toInt();
-			if (displayReset) led->displayReset();
-		}
-		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_intensity)) {
-			led->setIntensity(message.toInt());
-		}
-		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_effect_in)) {
-			displayAnim = true;
-			AppSettings.max7219_effect_in = (textEffect_t)message.toInt();
-			led->setTextEffect(AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
-			if (displayReset) led->displayReset();
-		}
-		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_effect_out)) {
-			displayAnim = true;
-			AppSettings.max7219_effect_out = (textEffect_t)message.toInt();
-			led->setTextEffect(AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
-			if (displayReset) led->displayReset();
-		}
-		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_alignment)) {
-			displayAnim = true;
-			AppSettings.max7219_alignment = (textPosition_t)message.toInt();
-			led->setTextAlignment(AppSettings.max7219_alignment);
-			if (displayReset) led->displayReset();
-		}
-		else if (topic.equals(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_reset)) {
-			displayReset = (bool)message.toInt();
-			Serial.printf("Display Reset set to %d", displayReset);
+		message.replace(AppSettings.max7219_topic_prefix, "display");
+		String piecesStr[5];
+		uint8_t pieces = splitString(topic, '/', piecesStr);
+
+		if (pieces > 3) {
+			String cmdtopic = piecesStr[3];
+			uint8_t zone_num = piecesStr[2].toInt();
+			//Serial.printf("Topic: %d Pieces\n", pieces);
+			//for (uint8_t z = 0; z < pieces; z++)
+			//	Serial.printf("Piece: %s\n", piecesStr[z].c_str());
+			if (cmdtopic.equals(AppSettings.max7219_topic_enable)) {
+				AppSettings.max7219_display[zone_num].enabled = message.toInt();
+			}
+			else if (cmdtopic.equals(AppSettings.max7219_topic_text)) {
+				AppSettings.max7219_display[zone_num].text = message;
+				AppSettings.max7219_display[zone_num].anim = true;
+				led->displayReset(zone_num);
+				led->setTextBuffer(zone_num, (char*)AppSettings.max7219_display[zone_num].text.c_str());
+				//led->displayText((char*)AppSettings.max7219_text.c_str(), AppSettings.max7219_alignment, led->getSpeed(), led->getPause(), AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
+				Serial.printf("Displaying %s Text '%s' on zone %d with align of %d speed (%d/%d)\r\n", AppSettings.max7219_display[zone_num].scroll ? "Scroll" : "Static", AppSettings.max7219_display[zone_num].text.c_str(), zone_num, AppSettings.max7219_display[zone_num].alignment, led->getSpeed(zone_num), led->getPause(zone_num));
+				Serial.printf("Text Effect In/Out %d/%d\r\n", AppSettings.max7219_display[zone_num].effect_in, AppSettings.max7219_display[zone_num].effect_out);
+			}
+			else if (cmdtopic.equals(AppSettings.max7219_topic_speed)) {
+				//ledMatrixTimer.setIntervalMs(message.toInt());
+				//led->displayReset();
+				led->setSpeed(zone_num, message.toInt());
+				if (AppSettings.max7219_display[zone_num].reset) led->displayReset(zone_num);
+			}
+			else if (cmdtopic.equals(AppSettings.max7219_topic_pause)) {
+				//ledMatrixTimer.setIntervalMs(message.toInt());
+				led->setPause(zone_num, message.toInt());
+				if (AppSettings.max7219_display[zone_num].reset) led->displayReset(zone_num);
+			}
+			else if (cmdtopic.equals(AppSettings.max7219_topic_charwidth)) {
+				led->setCharSpacing(message.toInt());
+				if (AppSettings.max7219_display[zone_num].reset) led->displayReset(zone_num);
+			}
+			else if (cmdtopic.equals(AppSettings.max7219_topic_invert)) {
+				AppSettings.max7219_display[zone_num].anim = true;
+				led->setInvert(message.toInt());
+				if (AppSettings.max7219_display[zone_num].reset) led->displayReset(zone_num);
+			}
+			else if (cmdtopic.equals(AppSettings.max7219_topic_scroll)) {
+				AppSettings.max7219_display[zone_num].anim = true;
+				AppSettings.max7219_display[zone_num].scroll = message.toInt();
+				if (AppSettings.max7219_display[zone_num].reset) led->displayReset(zone_num);
+			}
+			else if (cmdtopic.equals(AppSettings.max7219_topic_intensity)) {
+				led->setIntensity(zone_num, message.toInt());
+			}
+			else if (cmdtopic.equals(AppSettings.max7219_topic_effect_in)) {
+				AppSettings.max7219_display[zone_num].anim = true;
+				AppSettings.max7219_display[zone_num].effect_in = (textEffect_t)message.toInt();
+				led->setTextEffect(zone_num, AppSettings.max7219_display[zone_num].effect_in, AppSettings.max7219_display[zone_num].effect_out);
+				if (AppSettings.max7219_display[zone_num].reset) led->displayReset(zone_num);
+			}
+			else if (cmdtopic.equals(AppSettings.max7219_topic_effect_out)) {
+				AppSettings.max7219_display[zone_num].anim = true;
+				AppSettings.max7219_display[zone_num].effect_out = (textEffect_t)message.toInt();
+				led->setTextEffect(zone_num, AppSettings.max7219_display[zone_num].effect_in, AppSettings.max7219_display[zone_num].effect_out);
+				if (AppSettings.max7219_display[zone_num].reset) led->displayReset(zone_num);
+			}
+			else if (cmdtopic.equals(AppSettings.max7219_topic_alignment)) {
+				AppSettings.max7219_display[zone_num].anim = true;
+				AppSettings.max7219_display[zone_num].alignment = (textPosition_t)message.toInt();
+				led->setTextAlignment(AppSettings.max7219_display[zone_num].alignment);
+				if (AppSettings.max7219_display[zone_num].reset) led->displayReset(zone_num);
+			}
+			else if (cmdtopic.equals(AppSettings.max7219_topic_reset)) {
+				AppSettings.max7219_display[zone_num].reset = (bool)message.toInt();
+				Serial.printf("Display Reset set to %d", AppSettings.max7219_display[zone_num].reset);
+			}
+		} else {
+			//debugf("Not enough topic pieces!\n");
 		}
 	}
 }
@@ -461,7 +475,21 @@ void ledMatrixCb()
 {
 	ledMatrixTimer.stop();
 
-	if (displayEnable) {
+	for (uint8_t z = 0; z < AppSettings.max7219_zones; z++) {
+		if (AppSettings.max7219_display[z].enabled) {
+			led->displayAnimate();
+			if (AppSettings.max7219_display[z].anim && led->getZoneStatus(z)) {
+				if (AppSettings.max7219_display[z].scroll) {
+					led->displayZoneText(z, (char*)AppSettings.max7219_display[z].text.c_str(), AppSettings.max7219_display[z].alignment, led->getSpeed(z), led->getPause(z), AppSettings.max7219_display[z].effect_in, AppSettings.max7219_display[z].effect_out);
+					AppSettings.max7219_display[z].anim = true;
+				}
+			}
+		} else {
+			led->displayClear(z);
+		}
+	}
+
+	/*if (displayEnable) {
 		if (displayAnim && led->displayAnimate()) {
 			if (displayScroll) {
 				led->displayText((char*)AppSettings.max7219_text.c_str(), AppSettings.max7219_alignment, led->getSpeed(), led->getPause(), AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
@@ -470,7 +498,7 @@ void ledMatrixCb()
 		}
 	} else {
 		led->displayClear();
-	}
+	}*/
 
 	ledMatrixTimer.restart();
 }
@@ -646,6 +674,35 @@ void serialCb(Stream& stream, char arrivedChar, unsigned short availableCharsCou
 	}
 }
 
+int splitString(String &what, int delim,  String *splits)
+{
+  what.trim();
+  const char *chars = what.c_str();
+  int splitCount = 0; //1;
+  for (int i = 0; i < what.length(); i++) {
+    if (chars[i] == delim) splitCount++;
+  }
+  if (splitCount == 0) {
+    splits[0] = what.c_str();
+    return 1;
+  }
+
+  int pieceCount = splitCount + 1;
+
+  int splitIndex = 0;
+  int startIndex = 0;
+  for (int i = 0; i < what.length(); i++) {
+    if (chars[i] == delim) {
+      splits[splitIndex] = what.substring(startIndex, i).c_str();
+      splitIndex++;
+      startIndex = i + 1;
+    }
+  }
+  splits[splitIndex] = what.substring(startIndex, what.length()).c_str();
+
+  return pieceCount;
+}
+
 void init()
 {
 	/* Mount file system, in order to work with files */
@@ -757,23 +814,40 @@ void init()
 		}
 
 		if (AppSettings.max7219) {
-			debugf("Initialize MAX7219 LED Matrix x%d - SS Pin %d", AppSettings.max7219_count, AppSettings.max7219_ss_pin);
+			debugf("Initialize MAX7219 LED Matrix x%d - SS Pin %d - %d Zones", AppSettings.max7219_count, AppSettings.max7219_ss_pin, AppSettings.max7219_zones);
 			//led->init(AppSettings.max7219_count, AppSettings.max7219_ss_pin);
 			//TODO: Set SS Pin and Count to runtime
 			//led(AppSettings.max7219_ss_pin, AppSettings.max7219_count);
 			//led = new MD_Parola(4, AppSettings.max7219_count);
+
 			ledPtr.Construct(AppSettings.max7219_ss_pin, AppSettings.max7219_count);
 			led = &ledPtr.value;
 
-			led->begin();
+			led->begin(AppSettings.max7219_zones);
+
+			int8_t lastModule = -1;
+			for (uint8_t z = 0; z < AppSettings.max7219_zones; z++) {
+				led->setZone(z, lastModule+1, AppSettings.max7219_display[z].size+lastModule);
+				debugf("MAX7219 Zone %d: %d Modules (%d -> %d)", z, AppSettings.max7219_display[z].size, lastModule+1, AppSettings.max7219_display[z].size+lastModule);
+				lastModule = AppSettings.max7219_display[z].size-1;
+			}
+
+			//uint8_t degC[] = { 6, 3, 3, 56, 68, 68, 68 }; // Deg C
+			//led->addChar('$', degC);
+
+
+			for (uint8_t z = 0; z < AppSettings.max7219_zones; z++)
 			#if ENA_SPRITE
-			led->setSpriteData(sprite_in, W_SPRITE1, F_SPRITE1, sprite_out, W_SPRITE2, F_SPRITE2);
+			for (uint8_t z = 0; z < AppSettings.max7219_zones; z++)
+				led->setSpriteData(z, sprite_in, W_SPRITE1, F_SPRITE1, sprite_out, W_SPRITE2, F_SPRITE2);
 			#endif
 
-			led->displayClear();
-			led->setSpeed(AppSettings.max7219_speed);
-			led->displayText((char*)"", AppSettings.max7219_alignment, led->getSpeed(), led->getPause(), AppSettings.max7219_effect_in, AppSettings.max7219_effect_out);
-			while(led->displayAnimate());
+			for (uint8_t z = 0; z < AppSettings.max7219_zones; z++) {
+				led->displayClear(z);
+				led->setSpeed(z, AppSettings.max7219_display[z].speed);
+				led->displayZoneText(z, (char*)"", AppSettings.max7219_display[z].alignment, led->getSpeed(z), led->getPause(z), AppSettings.max7219_display[z].effect_in, AppSettings.max7219_display[z].effect_out);
+			}
+			//while(led->displayAnimate());
 
 			//ledMatrixTimer.initializeMs(200, ledMatrixCb).start();
 		}
