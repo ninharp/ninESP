@@ -34,7 +34,7 @@ RBOOT_BIG_FLASH ?= 1
 ## two rom mode (where two roms sit in the same 1mb block of flash)
 #RBOOT_TWO_ROMS  ?= 1
 ## size of the flash chip
-SPI_SIZE        ?= 1M
+SPI_SIZE        ?= 2M
 ## output file for first rom (.bin will be appended)
 RBOOT_ROM_0     ?= rom0
 ## input linker file for first rom
@@ -43,7 +43,7 @@ RBOOT_ROM_0     ?= rom0
 #RBOOT_ROM_1     ?= rom1
 #RBOOT_LD_1      ?= rom1.ld
 ## size of the spiffs to create
-SPIFF_SIZE      ?= 150000
+SPIFF_SIZE      ?= 200000
 ## option to completely disable spiffs
 #DISABLE_SPIFFS  = 1
 ## flash offsets for spiffs, set if using two rom mode or not on a 4mb flash

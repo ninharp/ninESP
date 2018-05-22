@@ -25,6 +25,11 @@
     <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
     <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
+    
+    <!-- build:js helper.js -->
+    <script src="helper.js"></script>
+    <!-- endbuild -->
+    
 </head>
 <body>
 
@@ -54,7 +59,7 @@
             <form method="POST" action="">
                 <fieldset>
                     <legend>Choose your connected peripherals</legend>
-                    <div class="col-md-offset-2">
+                    <div class="col-md-offset">
                     		<div class="form-group">
                             <label>General Sensor Publish Timer Delay</label>
 	                         	<input class="form-control" style="width: 100px" type="text" name="timer_delay" value="{timer_delay}"> 
@@ -65,13 +70,14 @@
                     		<div class="form-group">
                 				 <div class="checkbox">
                 				 	<label>
-                				 		<input type="checkbox" name="relay" {relay_on}>
+                				 		<input id="relay" type="checkbox" name="relay" {relay_on}>
                 				 		230V Relay Switch
                 				 	</label>
                 				 </div>
+                				 <div id="relay-group">
                 				 <div class="col-md-offset-1">
                 				 	<label>Relay Pin</label>
-                				 	<input class="form-control" style="width: 50px" type="text" name="relay_pin" value="{relay_pin}">
+                				 	<input id="test" class="form-control" style="width: 50px" type="text" name="relay_pin" value="{relay_pin}">
                 				 </div>
                 				 <div class="checkbox col-md-offset-2">
                 				 	<label>
@@ -113,16 +119,19 @@
                 				 	<label>Debounce Timeout in ms</label>
                 				 	<input class="form-control" style="width: 100px" type="text" name="keyinput_debounce" value="{key_debounce}">
                 				 </div>
+                				 <hr>
+                				 </div>
                         </div>
-                        <hr>
+                        
                         
                         <div class="form-group">
                 				 <div class="checkbox">
                 				 	<label>
-                				 		<input type="checkbox" name="adc" {adc_on}>
+                				 		<input id="adc" type="checkbox" name="adc" {adc_on}>
                 				 		Analog Sensor on ADC
                 				 	</label>
                 				 </div>
+                				 <div id="adc-group" class="col-md-offset-1">
                             <div class="checkbox">
                             	  MQTT Publish?
                                 <label>
@@ -134,32 +143,38 @@
                              </div>
                              <label>Publish Topic ADC Value</label>
 	                          <input class="form-control" style="width: 250px" type="text" name="topic_adc_pub" value="{topic_adc}">
+	                          <hr>
+	                          </div>
                         </div>
-                         <hr>
+                         
                          
                          <div class="form-group">
                 				 <div class="checkbox">
                 				 	<label>
-                				 		<input type="checkbox" name="rcswitch" {rcswitch_on}>
+                				 		<input id="rcswitch" type="checkbox" name="rcswitch" {rcswitch_on}>
                 				 		RCSwitch Device
                 				 	</label>
                 				 </div>
+                				 <div id="rcswitch-group" class="col-md-offset-1">
                 				  <label>Device Pin</label>
 	                          <input class="form-control" style="width: 50px" type="text" name="rcswitch_pin" value="{rcswitch_pin}">
                              <label>Command Topic</label>
 	                          <input class="form-control" style="width: 250px" type="text" name="topic_rcswitch" value="{topic_rcswitch}">
 	                          <br/>
-	                          <div class="rcdevices">{rcswitch_devs}</div>
+	                          <!-- <div class="rcdevices">{rcswitch_devs}</div> //-->
+									  <hr>
+									  </div>
                          </div>
-                         <hr>
+                         
                          
                          <div class="form-group">
                 				 <div class="checkbox">
                 				 	<label>
-                				 		<input type="checkbox" name="motion" {motion_on}>
+                				 		<input id="motion" type="checkbox" name="motion" {motion_on}>
                 				 		Motion Detection Device (i.e. HC-SR501)
                 				 	</label>
                 				 </div>
+                				 <div id="motion-group" class="col-md-offset-1">
                 				  <label>Device Pin</label>
 	                          <input class="form-control" style="width: 50px" type="text" name="motion_pin" value="{motion_pin}">
 	                          <div class="checkbox col-md-offset-2">
@@ -174,16 +189,19 @@
                              <label>Publish Topic</label>
 	                          <input class="form-control" style="width: 250px" type="text" name="topic_motion" value="{topic_motion}">
 	                          <br/>
+	                          <hr>
+	                          </div>
                          </div>
-                         <hr>
+                         
                          
                          <div class="form-group">
                 				 <div class="checkbox">
                 				 	<label>
-                				 		<input type="checkbox" name="max7219" {max7219_on}>
+                				 		<input id="max7219" type="checkbox" name="max7219" {max7219_on} checked>
                 				 		MAX7219 LED Display Matrix
                 				 	</label>
                 				 </div>
+									 <div id="max7219-group" class="col-md-offset-1">
                 				 <div>Note: It will be the Hardware SPI used, only the SS Pin is freely assignable</div><br/>                		
                 				  <label>Slave Select Pin</label>
 	                          <input class="form-control" style="width: 50px" type="text" name="max7219_pin" value="{max7219_pin}"><br/>
@@ -191,6 +209,11 @@
 	                          <input class="form-control" style="width: 50px" type="text" name="max7219_count" value="{max7219_count}"><br/>
 	                          <label>Topic Prefix</label>
 	                          <input class="form-control" style="width: 250px" type="text" name="max7219_prefix" value="{max7219_prefix}"><br/>
+	                          <label>Zone Definitions</label>
+	                          <div class="input_zones_wrap col-md-offset-2"><div id="zone-count"></div>
+									    <button class="add_zone_button">Add More Zones</button>
+    									 <div>Zone 1<input type="text" class="form-control" style="width: 60px" name="zone1" value="0"/></div>
+										</div>
 	                          <table border="0">
 	                          <tr>
 	                          <td><label>Enable Topic</label>
@@ -230,6 +253,7 @@
 	                          </tr>	                          
 	                          </table>
                          </div>
+                         </div>
                     </div>
                     <div class="col-md-offset-3">
                     	  <input type="submit" class="btn btn-success">
@@ -240,7 +264,7 @@
         </div>
     </div>
     <footer class="footer">
-         <p>&copy; Michael Sauer, 2017 --- Last Edited: {lastedit} --- Current Mode: {status}</p>
+         <p>&copy; Michael Sauer, 2017/18 --- Last Edited: {lastedit} --- Current Mode: {status}</p>
     </footer>
 
 </div> <!-- /container -->
