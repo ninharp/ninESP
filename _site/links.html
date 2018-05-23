@@ -6,17 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <!-- Begin Jekyll SEO tag v2.4.0 -->
-<title>examples | ninESP</title>
+<title>links | ninESP</title>
 <meta name="generator" content="Jekyll v3.7.3" />
-<meta property="og:title" content="examples" />
+<meta property="og:title" content="links" />
 <meta property="og:locale" content="en_US" />
 <meta name="description" content="ninHOME Node v0.2 - Easy Modular ESP8266 Firmware" />
 <meta property="og:description" content="ninHOME Node v0.2 - Easy Modular ESP8266 Firmware" />
-<link rel="canonical" href="http://localhost:4000/examples.html" />
-<meta property="og:url" content="http://localhost:4000/examples.html" />
+<link rel="canonical" href="http://localhost:4000/links.html" />
+<meta property="og:url" content="http://localhost:4000/links.html" />
 <meta property="og:site_name" content="ninESP" />
 <script type="application/ld+json">
-{"description":"ninHOME Node v0.2 - Easy Modular ESP8266 Firmware","@type":"WebPage","url":"http://localhost:4000/examples.html","publisher":{"@type":"Organization","logo":{"@type":"ImageObject","url":"http://localhost:4000/ninESP.png"}},"headline":"examples","@context":"http://schema.org"}</script>
+{"description":"ninHOME Node v0.2 - Easy Modular ESP8266 Firmware","@type":"WebPage","url":"http://localhost:4000/links.html","publisher":{"@type":"Organization","logo":{"@type":"ImageObject","url":"http://localhost:4000/ninESP.png"}},"headline":"links","@context":"http://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
     <link rel="stylesheet" href="/assets/css/style.css?v=b81f14a9ba7142078ad0adae6894d485c343174a">
@@ -41,10 +41,10 @@
   				<a href="working">Compatible ESP</a>
 				<a href="howtouse">How to Use</a>
 				<a href="flashing"class="sub1">Flashing to ESP</a>
-				<a href="examples"class="sub1 active">Usage Examples</a>
+				<a href="examples"class="sub1">Usage Examples</a>
 				<a href="mqtttopics">MQTT Topic List</a>				
 				<a href="download">Download</a>
-				<a href="links">Links</a>
+				<a href="links"class="active">Links</a>
   				<a href="faq">FAQ</a>
 			</div>
         
@@ -58,37 +58,9 @@
       </header>
       <section>
 
-      <h1 id="examples">Examples</h1>
+      <h1 id="links">Links</h1>
 
-<h2 id="examples-with-mosquitto-client">Examples with mosquitto client:</h2>
-
-<h3 id="max72xx-module">MAX72XX Module:</h3>
-
-<p>In the examples we use a topic prefix of “client/display/”</p>
-
-<p>Send a new text “Hello World” to Display with topic “client/display/text”
-<code class="highlighter-rouge">mosquitto_pub -h YOURMQTTBROKER -u MQTTUSER -P MQTTPASS -r -t client/display/text -m "Hello World"</code></p>
-
-<p>Enable inverting of the Display with topic “client/display/invert”</p>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mosquitto_pub -h YOURMQTTBROKER -u MQTTUSER -P MQTTPASS -r -t client/display/invert -m 1
-</code></pre></div></div>
-
-<h3 id="relay-module">Relay Module:</h3>
-
-<p>Switch relay to ON state on topic “client/relay”</p>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mosquitto_pub -h YOURMQTTBROKER -u MQTTUSER -P MQTTPASS -r -t client/relay -m 1
-</code></pre></div></div>
-
-<h3 id="rcswitch-module">RCSwitch Module:</h3>
-
-<p>In the examples we use a topic prefix of “client/rcswitch/”</p>
-
-<p>Switch Plug 1 to OFF state on topic “client/rcswitch/1”</p>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mosquitto_pub -h YOURMQTTBROKER -u MQTTUSER -P MQTTPASS -r -t client/rcswitch/1 -m 0
-</code></pre></div></div>
-
-<p>You can use any mqtt client to interact with ninESP, for example an mobile android mqtt client is 
-<a href="https://play.google.com/store/apps/details?id=net.routix.mqttdash">MQTT Dash</a></p>
+<p><a href="https://hackaday.io/project/28555-esp8266-max7219-dot-matrix-display-as-mqtt-client">Hackaday.io Project Page</a></p>
 
 
       </section>
