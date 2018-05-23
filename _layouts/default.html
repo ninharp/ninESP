@@ -22,7 +22,7 @@
 
         <!-- <p>{{ site.description | default: site.github.project_tagline }}</p> //-->
         <div class="menu">
-  				<a href="/" {% if page.title == "home" %}class="active"{% endif %}>Home</a>
+  				<a href="{{ "/" | absolute_url }}" {% if page.title == "home" %}class="active"{% endif %}>Home</a>
   				<a href="screenshots"{% if page.title == "screenshots" %}class="active"{% endif %}>Screenshots</a>
   				<a href="peripheral"{% if page.title == "peripheral" %}class="active"{% endif %}>Peripheral Modules</a>
   				<a href="working"{% if page.title == "working" %}class="active"{% endif %}>Compatible ESP</a>
@@ -31,6 +31,7 @@
 				<a href="examples"{% if page.title == "examples" %}class="sub1 active"{% else %}class="sub1"{% endif %}>Usage Examples</a>
 				<a href="mqtttopics"{% if page.title == "mqtttopics" %}class="active"{% endif %}>MQTT Topic List</a>				
 				<a href="download"{% if page.title == "download" %}class="active"{% endif %}>Download</a>
+				<a href="links"{% if page.title == "links" %}class="active"{% endif %}>Links</a>
   				<a href="faq"{% if page.title == "faq" %}class="active"{% endif %}>FAQ</a>
 			</div>
         
@@ -56,6 +57,14 @@
 
       </section>
       <footer>
+      	<a class="icon-twitter social-button borderless static" href="http://twitter.com/ninharp"></a>
+      	<a class="icon-instagram social-button borderless static" href="http://www.instagram.com/nin3d"></a>
+			<a class="icon-youtube social-button borderless static" href="http://www.youtube.com/user/ninharp"></a>
+			<a class="icon-googleplus social-button borderless static" href="http://plus.google.com/+DERZahnfee"></a>
+			<a class="icon-github social-button borderless static" href="https://github.com/ninharp"></a>
+			<a class="icon-linkedin social-button borderless static" href="https://www.linkedin.com/in/55167332"></a>
+			<a class="icon-facebook social-button borderless static" href="https://facebook.com/nin3d7315720"></a>
+      	
         {% if site.github.is_project_page %}
         <p>This project is maintained by <a href="{{ site.github.owner_url }}">{{ site.github.owner_name }}</a></p>
         {% endif %}
