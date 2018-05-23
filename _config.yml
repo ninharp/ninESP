@@ -1,1 +1,12 @@
 theme: jekyll-theme-minimal
+
+logo: ninESP.png
+show_downloads: false
+
+
+exclude:
+  - .git/
+  - .github/
+  - Gemfile
+  - Gemfile.lock
+  - README.md

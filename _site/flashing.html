@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>flashing | ninESP</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="flashing" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="ninHOME Node v0.2 - Easy Modular ESP8266 Firmware" />
+<meta property="og:description" content="ninHOME Node v0.2 - Easy Modular ESP8266 Firmware" />
+<link rel="canonical" href="http://localhost:4000/flashing.html" />
+<meta property="og:url" content="http://localhost:4000/flashing.html" />
+<meta property="og:site_name" content="ninESP" />
+<script type="application/ld+json">
+{"description":"ninHOME Node v0.2 - Easy Modular ESP8266 Firmware","@type":"WebPage","url":"http://localhost:4000/flashing.html","publisher":{"@type":"Organization","logo":{"@type":"ImageObject","url":"http://localhost:4000/ninESP.png"}},"headline":"flashing","@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/assets/css/style.css?v=b81f14a9ba7142078ad0adae6894d485c343174a">
+    <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+	<!-- <h1><a href="http://localhost:4000/">ninESP</a></h1> //-->
+        
+        
+          <p style="padding-top: 14px; padding-bottom: 5%;"><a href="http://localhost:4000/"><img src="/ninESP.png" alt="ninESP Logo" /></a></p>
+        
+
+        <!-- <p>ninHOME Node v0.2 - Easy Modular ESP8266 Firmware</p> //-->
+        <div class="menu">
+  				<a href="/" >Home</a>
+  				<a href="screenshots">Screenshots</a>
+  				<a href="peripheral">Peripheral Modules</a>
+  				<a href="working">Compatible ESP</a>
+				<a href="howtouse">How to Use</a>
+				<a href="flashing"class="sub1 active">Flashing to ESP</a>
+				<a href="examples"class="sub1">Usage Examples</a>
+				<a href="mqtttopics">MQTT Topic List</a>				
+				<a href="download">Download</a>
+  				<a href="faq">FAQ</a>
+			</div>
+        
+        
+        <p class="view"><a href="http://github.com/ninharp/ninESP">View the Project on GitHub <small>ninharp/ninESP</small></a></p>
+        
+
+        
+	
+        
+      </header>
+      <section>
+
+      <h1 id="flashing-to-your-board">Flashing to your board</h1>
+
+<p>If you just want to flash the firmware without the compiling, you can take one of our binary releases from the firmware folder in the repository. 
+There are zip archives with the firmware files in it. 
+Its not one file builds so you have to flash it seperately. The flash addresses are the file names of the binaries.
+Except of the spiff rom, which had to be in this case on memory address <em>0x5A000</em>. 
+An example flashing command with esptool could look like this.</p>
+
+<p><code class="highlighter-rouge">esptool.py -p /dev/ttyUSB0 -b 230400 write_flash -ff 40m -fm qio -fs 32m 0x00000 0x00000.bin 0xa000 0xa000.bin 0x5A000 spiff_rom.bin</code></p>
+
+
+      </section>
+      <footer>
+        
+        <p>This project is maintained by <a href="http://github.com/ninharp">ninharp</a></p>
+        
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="/assets/js/scale.fix.js"></script>
+    
+  </body>
+</html>

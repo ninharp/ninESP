@@ -1,0 +1,34 @@
+---
+---
+
+@import "{{ site.theme }}";
+
+.menu {
+    width: 100%;
+    padding-bottom: 30px;
+}
+
+.menu a {
+    background-color: #fff;
+    color: black; 
+    display: block;
+    padding: 4px;
+    text-decoration: none; 
+}
+
+.menu a.sub1 {
+    background-color: #fff;
+    color: black; 
+    display: block;
+    padding-left: 25px;
+    text-decoration: none; 
+}
+
+.menu a:hover {
+    background-color: #eee;
+}
+
+.menu a.active {
+    background-color: #ccc;
+    color: black;
+}
