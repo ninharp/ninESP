@@ -8,3 +8,4 @@ web/*/.periph_settings.conf
 web/.*.conf
 temp
 out/
+gh-pages

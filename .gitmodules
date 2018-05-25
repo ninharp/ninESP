@@ -1,6 +1,7 @@
 [submodule "Sming"]
 	path = Sming
 	url = https://github.com/SmingHub/Sming.git
+	branch = develop
 [submodule "esp-open-sdk"]
 	path = esp-open-sdk
 	url = https://github.com/pfalcon/esp-open-sdk.git
