@@ -1,5 +1,6 @@
 ---
-title: home
+title: Home
+tag: home
 ---
 
 # What is ninESP?

@@ -1,7 +1,8 @@
 ---
-title: working
+title: Compatible Boards
+tag: working
 ---
-# Known Working Boards/Chips
+# Compatible Boards/Chips
 
 Here you find a list of development boards and modules which are known to work with ninESP firmware.
 ESP-201 Modules will work but some of them are only manufactured with an 512k flash so it is too small

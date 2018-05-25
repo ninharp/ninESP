@@ -31,7 +31,7 @@
 .menu a.active {
     background-color: #ccc;
     color: black;
-    font-weight: bold;
+    text-weight: bold;
 }$sb-font-folder: "../fonts"; // relative to the final css file
 
 @font-face {

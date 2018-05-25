@@ -1,5 +1,6 @@
 ---
-title: faq
+title: FAQ
+tag: faq
 ---
 # Frequently Asked Questions
 

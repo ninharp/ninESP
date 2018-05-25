@@ -1,5 +1,6 @@
 ---
-title: mqtttopics
+title: MQTT Topics
+tag: mqtttopics
 ---
 # MQTT Topic List
 <table border="1" align="center" width="80%">

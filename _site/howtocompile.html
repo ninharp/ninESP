@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>How to compile | ninESP</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="How to compile" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="ninHOME Node v0.2 - Easy Modular ESP8266 Firmware" />
+<meta property="og:description" content="ninHOME Node v0.2 - Easy Modular ESP8266 Firmware" />
+<link rel="canonical" href="http://localhost:4000/howtocompile.html" />
+<meta property="og:url" content="http://localhost:4000/howtocompile.html" />
+<meta property="og:site_name" content="ninESP" />
+<script type="application/ld+json">
+{"description":"ninHOME Node v0.2 - Easy Modular ESP8266 Firmware","@type":"WebPage","url":"http://localhost:4000/howtocompile.html","publisher":{"@type":"Organization","logo":{"@type":"ImageObject","url":"http://localhost:4000/ninESP.png"}},"headline":"How to compile","@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/assets/css/style.css?v=d89c7a54cee9411461bf223fba8b2d99fb2f7c64">
+    <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+	<!-- <h1><a href="http://localhost:4000/">ninESP</a></h1> //-->
+        
+        
+          <p style="padding-top: 14px; padding-bottom: 5%;"><a href="http://localhost:4000/"><img src="/ninESP.png" alt="ninESP Logo" /></a></p>
+        
+
+        <!-- <p>ninHOME Node v0.2 - Easy Modular ESP8266 Firmware</p> //-->
+        <div class="menu">
+  				<a href="http://localhost:4000/" >Home</a>
+  				<a href="screenshots">Screenshots</a>
+  				<a href="peripheral">Peripheral Modules</a>
+  				<a href="working">Compatible Boards</a>
+				<a href="howtouse">How to Use</a>
+				<a href="howtocompile"class="sub1 active">How to Compile</a>				
+				<a href="flashing"class="sub1">Manual Flashing</a>
+				<a href="examples"class="sub1">Usage Examples</a>
+				<a href="mqtttopics">MQTT Topic List</a>				
+				<a href="download">Download</a>
+				<a href="links">Links</a>
+  				<a href="faq">FAQ</a>
+			</div>
+        
+        
+        <p class="view"><a href="http://github.com/ninharp/ninESP">View the Project on GitHub <small>ninharp/ninESP</small></a></p>
+        
+
+        
+	
+        
+      </header>
+      <section>
+
+      <h1 id="step-by-step-compiling">Step by Step: Compiling</h1>
+
+<h2 id="1-install-sdk">1. Install SDK</h2>
+
+<p>Install the integrated SDK for ESP8266/ESP8285 chips from this repository <a href="https://github.com/pfalcon/esp-open-sdk">esp-open-sdk</a> 
+after that make sure that your current shell has the xtensa-lx106 compiler in PATH.</p>
+
+<h2 id="2-clone-ninesp-repository">2. Clone ninESP Repository</h2>
+
+<p>Open a Terminal and change to a directory of your choice where to clone the repository.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>git clone <span class="nt">--recurse-submodules</span> git@github.com:ninharp/ninESP.git ninESP
+
+<span class="c"># Change to repository directory</span>
+<span class="nv">$ </span><span class="nb">cd </span>ninESP
+</code></pre></div></div>
+<h2 id="3-prepare-the-sming-framework">3. Prepare the Sming Framework</h2>
+
+<p>After successfull cloning of the repository with all submodules we had to update the Sming Framework (we use the develop branch at the moment)</p>
+
+<p>Run the following commands in the repository directory</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Change to Sming Framework directory</span>
+<span class="nv">$ </span><span class="nb">cd </span>Sming/Sming 
+
+<span class="c"># Checkout to develop branch of Sming</span>
+<span class="nv">$ </span>git checkout develop <span class="nt">--recurse-submodules</span>
+
+<span class="c"># Update Sming submodules</span>
+<span class="nv">$ </span>git submodule update <span class="nt">--init</span> <span class="nt">--recursive</span>
+
+<span class="c"># Do a dist clean on the Sming repository</span>
+<span class="nv">$ </span>make dist-clean
+
+<span class="c"># Change back to ninESP</span>
+<span class="nv">$ </span><span class="nb">cd</span> ../..
+</code></pre></div></div>
+
+<h2 id="4-patch-the-md-libraries">4. Patch the MD Libraries</h2>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>./patch-linux.sh 
+Patching MD_MAX72xx...
+patching file MD_MAX72XX/src/MD_MAX72xx.cpp
+Patching MD_Parola...
+patching file MD_Parola/src/MD_Parola.h
+All patching <span class="k">done</span>
+</code></pre></div></div>
+
+<h2 id="5-edit-library-locations">5. Edit Library locations</h2>
+
+<p>Edit the <em>Makefile-user.mk</em> with an editor of your choice to suit your installation folders. Also you can change the flashing parameters.</p>
+
+<p><strong>ESP_HOME</strong> had to set to the correct location of your esp-open-sdk installation</p>
+
+<p><strong>SMING_HOME</strong> should be set to ninESP repository location plus the “Sming/Sming” folder at the end.</p>
+
+<p><em>f.E. SMING_HOME=/home/michael/ninESP/Sming/Sming</em></p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>## Local build configuration
+## Parameters configured here will override default and ENV values.
+
+## Add your source directories here separated by space
+MODULES = app MD_Parola/src MD_MAX72XX/src
+EXTRA_INCDIR = include MD_Parola/src MD_MAX72XX/src
+
+## ESP_HOME sets the path where ESP tools and SDK are located.
+ESP_HOME = /opt/esp-open-sdk
+
+## SMING_HOME sets the path where Sming framework is located.
+SMING_HOME = /opt/Sming/Sming
+
+## COM port parameter is reqruied to flash firmware correctly.
+COM_PORT = /dev/ttyUSB0
+
+[...]
+</code></pre></div></div>
+
+<h2 id="6-compile-ninesp">6. Compile ninESP</h2>
+
+<p>To finally compile ninESP you just have to run a <em>make all</em> command in the ninESP folder.
+This may take a while…</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># Just to make sure do a clean
+$ make clean
+
+# Compile
+$ make all
+</code></pre></div></div>
+
+<h2 id="7-flash-firmware">7. Flash Firmware</h2>
+
+<p>When you flash the ninESP for the first time it is recommended that you erase the whole memory of the ESP8266 initially, you can do this by a <em>make flashinit</em> call. 
+Just to make sure you have no saved wifi networks or values stored in flash.</p>
+
+<p>After this you can flash the newly compiled firmware with a simple <em>make flash</em>.
+Make sure that your COM_PORT is pointing to the correct serial device.</p>
+
+<p>If you get an error on the end of flashing about “Inappropriate Device rights”, 
+just ignore and use any other serial terminal, f.E. minicom or cutecom.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># Erase the ESP8266 flash
+$ make flashinit
+
+# Flash the firmware
+$ make flash
+</code></pre></div></div>
+
+
+      </section>
+      <footer>
+      	<a class="icon-twitter social-button borderless static" href="http://twitter.com/ninharp"></a>
+      	<a class="icon-instagram social-button borderless static" href="http://www.instagram.com/nin3d"></a>
+			<a class="icon-youtube social-button borderless static" href="http://www.youtube.com/user/ninharp"></a>
+			<a class="icon-googleplus social-button borderless static" href="http://plus.google.com/+DERZahnfee"></a>
+			<a class="icon-github social-button borderless static" href="https://github.com/ninharp"></a>
+			<a class="icon-linkedin social-button borderless static" href="https://www.linkedin.com/in/55167332"></a>
+			<a class="icon-facebook social-button borderless static" href="https://facebook.com/nin3d7315720"></a>
+      	
+        
+        <p>This project is maintained by <a href="http://github.com/ninharp">ninharp</a></p>
+        
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="/assets/js/scale.fix.js"></script>
+    
+  </body>
+</html>

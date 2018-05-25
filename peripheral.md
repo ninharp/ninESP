@@ -1,5 +1,6 @@
 ---
-title: peripheral
+title: Peripheral Modules
+tag: peripheral
 ---
 
 # Peripheral Modules

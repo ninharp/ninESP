@@ -1,5 +1,6 @@
 ---
-title: screenshots
+title: Screenshots
+tag: screenshots
 ---
 # Screenshots
 

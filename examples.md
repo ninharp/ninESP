@@ -1,5 +1,6 @@
 ---
-title: examples
+title: Examples
+tag: examples
 ---
 # Examples
 
