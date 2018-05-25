@@ -1,0 +1,11 @@
+--- /home/michael/Arduino/libraries/MD_MAX72XX/src/MD_MAX72xx.cpp	2018-05-25 10:03:02.507500134 +0200
++++ ./MD_MAX72XX/src/MD_MAX72xx.cpp	2018-05-25 10:03:58.192309116 +0200
+@@ -105,7 +105,7 @@
+ 
+   free(_matrix);
+   free(_spiData);
+-#if USE_LOCAL_FONT && USE_FONT_INDEX
++#if USE_LOCAL_FONT && USE_INDEX_FONT
+   if (_fontIndex != NULL) free(_fontIndex);
+ #endif
+ }
