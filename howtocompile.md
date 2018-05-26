@@ -16,9 +16,9 @@ after that make sure that your current shell has the xtensa-lx106 compiler in PA
 Open a Terminal and change to a directory of your choice where to clone the repository.
 
 ```shell
-$ git clone --recurse-submodules git@github.com:ninharp/ninESP.git ninESP
+$ git clone --recurse-submodules https://github.com/ninharp/ninESP.git
 
-# Change to repository directory
+# Change then to repository directory
 $ cd ninESP
 ```
 ## 3. Prepare the Sming Framework
