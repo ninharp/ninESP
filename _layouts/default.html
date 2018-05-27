@@ -23,17 +23,17 @@
         <!-- <p>{{ site.description | default: site.github.project_tagline }}</p> //-->
         <div class="menu">
   				<a href="{{ "/" | absolute_url }}" {% if page.tag == "home" %}class="active"{% endif %}>Home</a>
-  				<a href="screenshots"{% if page.tag == "screenshots" %}class="active"{% endif %}>Screenshots</a>
-  				<a href="peripheral"{% if page.tag == "peripheral" %}class="active"{% endif %}>Peripheral Modules</a>
-  				<a href="working"{% if page.tag == "working" %}class="active"{% endif %}>Compatible Boards</a>
-				<a href="howtouse"{% if page.tag == "howtouse" %}class="active"{% endif %}>How to Use</a>
-				<a href="howtocompile"{% if page.tag == "howtocompile" %}class="sub1 active"{% else %}class="sub1"{% endif %}>How to Compile</a>				
-				<a href="flashing"{% if page.tag == "flashing" %}class="sub1 active"{% else %}class="sub1"{% endif %}>Manual Flashing</a>
-				<a href="examples"{% if page.tag == "examples" %}class="sub1 active"{% else %}class="sub1"{% endif %}>Usage Examples</a>
-				<a href="mqtttopics"{% if page.tag == "mqtttopics" %}class="active"{% endif %}>MQTT Topic List</a>				
-				<a href="download"{% if page.tag == "download" %}class="active"{% endif %}>Download</a>
-				<a href="links"{% if page.tag == "links" %}class="active"{% endif %}>Links</a>
-  				<a href="faq"{% if page.tag == "faq" %}class="active"{% endif %}>FAQ</a>
+  				<a href="{{ "/pages/screenshots.html" | absolute_url }}"{% if page.tag == "screenshots" %}class="active"{% endif %}>Screenshots</a>
+  				<a href="{{ "/pages/peripheral.html" | absolute_url }}"{% if page.tag == "peripheral" %}class="active"{% endif %}>Peripheral Modules</a>
+  				<a href="{{ "/pages/working.html" | absolute_url }}"{% if page.tag == "working" %}class="active"{% endif %}>Compatible Boards</a>
+				<a href="{{ "/pages/howtouse.html" | absolute_url }}"{% if page.tag == "howtouse" %}class="active"{% endif %}>How to Use</a>
+				<a href="{{ "/pages/howtocompile.html" | absolute_url }}"{% if page.tag == "howtocompile" %}class="sub1 active"{% else %}class="sub1"{% endif %}>How to Compile</a>				
+				<a href="{{ "/pages/flashing.html" | absolute_url }}"{% if page.tag == "flashing" %}class="sub1 active"{% else %}class="sub1"{% endif %}>Manual Flashing</a>
+				<a href="{{ "/pages/examples.html" | absolute_url }}"{% if page.tag == "examples" %}class="sub1 active"{% else %}class="sub1"{% endif %}>Usage Examples</a>
+				<a href="{{ "/pages/mqtttopics.html" | absolute_url }}"{% if page.tag == "mqtttopics" %}class="active"{% endif %}>MQTT Topic List</a>				
+				<a href="{{ "/pages/download.html" | absolute_url }}"{% if page.tag == "download" %}class="active"{% endif %}>Download</a>
+				<a href="{{ "/pages/links.html" | absolute_url }}"{% if page.tag == "links" %}class="active"{% endif %}>Links</a>
+  				<a href="{{ "/pages/faq.html" | absolute_url }}"{% if page.tag == "faq" %}class="active"{% endif %}>FAQ</a>
 			</div>
         
         {% if site.github.is_project_page %}
