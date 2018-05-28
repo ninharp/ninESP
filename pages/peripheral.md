@@ -10,7 +10,7 @@ Peripheral modules which are currently build in or in development state
 <table border="1" align="center" width="80%">
 <tr><th width="40%">Periphery</th><th>Working state</th></tr>
 <tr><td>Status LED</td><td><font color="#11ff55"><b>working</b></font></td></tr>
-<tr><td><a href="/pages/mod_relay.html" title="Relay Module">Relay Module</a></td><td><font color="#11ff55"><b>working</b></font><br/>on any free GPIO Pin and optional HW Switch support</td></tr>
+<tr><td><a href="mod_relay.html" title="Relay Module">Relay Module</a></td><td><font color="#11ff55"><b>working</b></font><br/>on any free GPIO Pin and optional HW Switch support</td></tr>
 <tr><td>Analog Sensor on Pin A0</td><td><font color="#11ff55"><b>working</b></font><br>Reference Voltage of 3v3</td></tr>
 <tr><td>HC-SR501 Motion Sensor</td><td><font color="#11ff55"><b>working</b></font><br/>on any free GPIO Pin</td></tr>
 <tr><td>MAX7219 LED Matrix<br></td><td><font color="#11ff55"><b>working</b></font><br>currently only with Hardware SPI Support<br>Pins for HW SPI are IO13 (MOSI) and IO14 (CLK) the CS Pin is free assignable</td></tr>
