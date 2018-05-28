@@ -11,7 +11,9 @@ tag: examples
 In the examples we use a topic prefix of "client/display/"
 
 Send a new text "Hello World" to Display with topic "client/display/text"
-```mosquitto_pub -h YOURMQTTBROKER -u MQTTUSER -P MQTTPASS -r -t client/display/text -m "Hello World"```
+```
+mosquitto_pub -h YOURMQTTBROKER -u MQTTUSER -P MQTTPASS -r -t client/display/text -m "Hello World"
+```
 
 Enable inverting of the Display with topic "client/display/invert"
 ```
