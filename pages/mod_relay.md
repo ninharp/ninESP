@@ -4,7 +4,7 @@ tag: mod_relay
 ---
 # Relay Module
 
-## Exampe Relay Modules
+## Example Relay Modules
 ![Relay Modules](../img/modules/relay_modules.jpg  "Relay Modules")
 
 ## Config Settings in Webinterface:

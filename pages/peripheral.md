@@ -12,7 +12,7 @@ Peripheral modules which are currently build in or in development state
 <tr><td>Status LED</td><td><font color="#11ff55"><b>working</b></font></td></tr>
 <tr><td><a href="mod_relay.html" title="Relay Module">Relay Module</a></td><td><font color="#11ff55"><b>working</b></font><br/>on any free GPIO Pin and optional HW Switch support</td></tr>
 <tr><td>Analog Sensor on Pin A0</td><td><font color="#11ff55"><b>working</b></font><br>Reference Voltage of 3v3</td></tr>
-<tr><td>HC-SR501 Motion Sensor</td><td><font color="#11ff55"><b>working</b></font><br/>on any free GPIO Pin</td></tr>
+<tr><td><a href="mod_motion.html" title="Motion Sensor Module">HC-SR501 Motion Sensor</a></td><td><font color="#11ff55"><b>working</b></font><br/>on any free GPIO Pin</td></tr>
 <tr><td>MAX7219 LED Matrix<br></td><td><font color="#11ff55"><b>working</b></font><br>currently only with Hardware SPI Support<br>Pins for HW SPI are IO13 (MOSI) and IO14 (CLK) the CS Pin is free assignable</td></tr>
 <tr><td>RCSwitch for 868/433MHz Remote Plugs</td><td><font color="#ccddcc"><b>working</b></font><br/>on any GPIO Pin but configuration Webinterface still missing, configuration of plugs currently in config file only</td></tr>
 <tr><td>HD44780 LCD Display over I2C</td><td><font color="#dd0000"><b>not fully implemented</b></font></td></tr>
