@@ -13,7 +13,7 @@
 #define INCLUDE_APP_DEFAULTS_H_
 
 /* Version information (Note: had to be in this order to work properly at the moment) */
-#define VER_BUILD		90
+#define VER_BUILD		100
 #define VER_MINOR		3
 #define VER_MAJOR		0
 
@@ -71,8 +71,8 @@
 #define DEFAULT_MQTT_PASS "password"
 
 /* FTP Settings */
-#define DEFAULT_FTP_USER "michael"
-#define DEFAULT_FTP_PASS "123"
+#define DEFAULT_FTP_USER "ftpuser"
+#define DEFAULT_FTP_PASS "1234"
 #define DEFAULT_FTP_PORT 21
 
 /* UDP Settings */

@@ -820,7 +820,7 @@ void init()
 			//led(AppSettings.max7219_ss_pin, AppSettings.max7219_count);
 			//led = new MD_Parola(4, AppSettings.max7219_count);
 
-			ledPtr.Construct(AppSettings.max7219_ss_pin, AppSettings.max7219_count);
+			ledPtr.Construct(MD_MAX72XX::FC16_HW, AppSettings.max7219_ss_pin, AppSettings.max7219_count);
 			led = &ledPtr.value;
 
 			led->begin(AppSettings.max7219_zones);

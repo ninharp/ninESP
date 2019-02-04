@@ -513,7 +513,7 @@ void onAjaxConnect(HttpRequest &request, HttpResponse &response)
 /* Will be called when system initialization was completed */
 void startWebinterface()
 {
-	//startFTP();
+	startFTP();
 	startWebServer();
 }
 
