@@ -37,6 +37,7 @@ ISSUES
 ######
 
 + Split setting disabling on settings.html, periph.html, ... (javascript)
-+ Loading of mqtt settings are not properly
-+ LWT does not work properly
 + Restart of chip only work sometimes
++ Patch file for MD_Parola.h ARRAY_SIZE implementations missing
++ Patch file for Sming Makefile_rboot.mk with additional CFLAGS missing
+

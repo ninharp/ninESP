@@ -168,12 +168,20 @@ void onPeriphConfig(HttpRequest &request, HttpResponse &response)
 		AppSettings.rcswitch = request.getPostParameter("rcswitch").equals("on") ? true : false;
 		AppSettings.rcswitch_topic_prefix = request.getPostParameter("topic_rcswitch");
 		AppSettings.rcswitch_pin = String(request.getPostParameter("rcswitch_pin")).toInt();
-		//TODO RCSWitch Save devices aswell
+		//TODO RCSWitch Save devices aswell (template in max7219)
 
 		/* MAX7219 Display Settings */
 		AppSettings.max7219 = request.getPostParameter("max7219").equals("on") ? true : false;
 		AppSettings.max7219_count = String(request.getPostParameter("max7219_count")).toInt();
 		AppSettings.max7219_ss_pin = String(request.getPostParameter("max7219_pin")).toInt();
+		AppSettings.max7219_zones = String(request.getPostParameter("max7219_zones")).toInt();
+		for (int z = 0; z < AppSettings.max7219_zones; z++) {
+			String zone = String("max7219_zone");
+			zone += String(z);
+			debugf("save post zone %d = %d", z, String(request.getPostParameter(zone)).toInt());
+			AppSettings.max7219_display[z].size = String(request.getPostParameter(zone)).toInt();
+		}
+
 		AppSettings.max7219_topic_prefix = request.getPostParameter("max7219_prefix");
 		AppSettings.max7219_topic_enable = request.getPostParameter("max7219_enable");
 		AppSettings.max7219_topic_text = request.getPostParameter("max7219_text");
@@ -257,6 +265,14 @@ void onPeriphConfig(HttpRequest &request, HttpResponse &response)
 	/* MAX7219 Settings */
 	vars["max7219_on"] = AppSettings.max7219 ? checked_str : "";
 	vars["max7219_count"] = AppSettings.max7219_count;
+	vars["max7219_zones"] = AppSettings.max7219_zones;
+	debugf("zones=%d",AppSettings.max7219_zones);
+	for (int z = 0; z < AppSettings.max7219_zones; z++) {
+		String zone = String("max7219_zone");
+		zone += String(z);
+		vars[zone] = AppSettings.max7219_display[z].size;
+		debugf("zone %d = %d", z, AppSettings.max7219_display[z].size);
+	}
 	vars["max7219_pin"] = AppSettings.max7219_ss_pin;
 	vars["max7219_prefix"] = AppSettings.max7219_topic_prefix;
 	vars["max7219_enable"] = AppSettings.max7219_topic_enable;

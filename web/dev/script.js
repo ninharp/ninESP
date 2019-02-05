@@ -4,7 +4,7 @@
 <![endif]-->
 
 $(document).ready(function() {
-    App.GetNetworks(!1), App.Events.ReloadNetworks();
+	 App.GetNetworks(!1), App.Events.ReloadNetworks();
 });
 
 var App = {

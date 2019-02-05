@@ -7,5 +7,7 @@ web/*/.mqtt_settings.conf
 web/*/.periph_settings.conf
 web/.*.conf
 temp
-out/
+out
+bak
 gh-pages
+

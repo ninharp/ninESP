@@ -154,20 +154,17 @@ void onMQTTMessageReceived(String topic, String message)
 			/* Set relay to on */
 			relay.set(true);
 			/* Check mqtt connection status */
-			//if (mqtt->getConnectionState() != eTCS_Connected)
-			//	startMqttClient(); // Auto reconnect
-
+			if (mqtt.getConnectionState() != eTCS_Connected)
+				startMqttClient(); // Auto reconnect
 			/* Publish current relay state */
 			mqtt.publish(AppSettings.relay_topic_pub, "1", true);
 		} else if (message.equals("off") || message.equals("0")) { // Relay OFF
 			/* Set relay to off */
 			relay.set(false);
 			/* Check mqtt connection status */
-			//if (mqtt->getConnectionState() != eTCS_Connected)
-			//	startMqttClient(); // Auto reconnect
-
+			if (mqtt.getConnectionState() != eTCS_Connected)
+				startMqttClient(); // Auto reconnect
 			/* Publish current relay state */
-			//TODO problem?
 			mqtt.publish(AppSettings.relay_topic_pub, "0", true);
 		}
 	}
@@ -295,6 +292,11 @@ void sensorPublish()
 	}
 }
 
+void onMessageDelivered(uint16_t msgId, int type)
+{
+	debugf("Message with id %d and QoS %d was delivered successfully.", msgId, (type == MQTT_MSG_PUBREC ? 2 : 1));
+}
+
 /* Start MQTT client and publish/subscribe to the used services */
 void startMqttClient()
 {
@@ -345,7 +347,7 @@ void startMqttClient()
 	}
 
 	/* Publish LWT message */
-	mqtt.publishWithQoS(AppSettings.mqtt_topic_lwt, WifiStation.getIP().toString(), 1, true);
+	mqtt.publishWithQoS(AppSettings.mqtt_topic_lwt, WifiStation.getIP().toString(), 1, true, onMessageDelivered);
 
 	/* If relay is attached and enabled in settings */
 	if (AppSettings.relay) {
@@ -548,13 +550,11 @@ void connectOk(IPAddress ip, IPAddress mask, IPAddress gateway)
 
 	if (AppSettings.existMQTT()) {
 		AppSettings.loadMQTT();
-		//mqtt->setEnabled(AppSettings.mqtt_enabled);
 
 		/* Start MQTT client and publish/subscribe used extensions */
 		debugf("Starting MQTT Client");
 		startMqttClient();
 
-		//TODO: Is another load of peripheral settings necessary?
 		/* Load peripheral settings */
 		if (AppSettings.existPeriph()) {
 			AppSettings.loadPeriph();
@@ -641,7 +641,7 @@ void motionSensorCheck()
 			motionState = true;
 			//if (mqtt->getConnectionState() != eTCS_Connected) //TODO remove autoconnect cause of connCheck timer?
 			//			startMqttClient(); // Auto reconnect
-			mqtt.publishWithQoS(AppSettings.motion_topic, "1", 1, true);
+			mqtt.publishWithQoS(AppSettings.motion_topic, "1", 1, true, onMessageDelivered);
 			debugf("Motion ON (%s)", AppSettings.motion_topic.c_str());
 		}
 		//digitalWrite(14, 1);
@@ -650,7 +650,7 @@ void motionSensorCheck()
 			motionState = false;
 			//if (mqtt->getConnectionState() != eTCS_Connected)
 			//			startMqttClient(); // Auto reconnect
-			mqtt.publishWithQoS(AppSettings.motion_topic, "0", 1, true);
+			mqtt.publishWithQoS(AppSettings.motion_topic, "0", 1, true, onMessageDelivered);
 			debugf("Motion OFF (%s)", AppSettings.motion_topic.c_str());
 		}
 		//digitalWrite(14, 0);

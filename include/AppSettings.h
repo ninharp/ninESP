@@ -401,8 +401,8 @@ struct ApplicationSettingsStorage
 		jmax7219["zones"] = max7219_zones;
 		JsonObject& zone_sizes = jsonBuffer.createObject();
 		jmax7219["zone_sizes"] = zone_sizes;
-		for (int i = 0; i < rcswitch_count; i++) {
-			zone_sizes[String(i)] = String(max7219_display[i].size);
+		for (int i = 0; i < max7219_zones; i++) {
+			zone_sizes[String(i)] = String(max7219_display[i].size).toInt();
 		}
 		jmax7219["topic_prefix"] = max7219_topic_prefix;
 		jmax7219["topic_enable"] = max7219_topic_enable;

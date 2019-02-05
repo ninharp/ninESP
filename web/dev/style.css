@@ -380,3 +380,49 @@
 .error{
     margin-top: 10px;
 }
+
+.zone_container input[type=text] {
+padding:5px 0px;
+margin:5px 5px 5px 0px;
+}
+
+.add_zone_field
+{
+    background-color: #1c97f3;
+    border: none;
+    color: white;
+    padding: 4px 8px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+    margin: 4px 2px;
+    cursor: pointer;
+ 	 border:1px solid #186dad;
+}
+
+.zone_num{
+    border: 1px solid #1c97f3;
+    width: 50px;
+    height: 40px;
+ 	 margin-bottom:14px;
+}
+
+.zone_text{
+	font-weight: bold;
+	margin-right: 8px;
+	margin-left: 8px;
+}
+
+.delete{
+    background-color: #fd1200;
+    border: none;
+    color: white;
+    padding: 5px 15px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 12px;
+    margin: 4px 2px;
+    cursor: pointer;
+}

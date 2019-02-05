@@ -13,7 +13,7 @@
 #define INCLUDE_APP_DEFAULTS_H_
 
 /* Version information (Note: had to be in this order to work properly at the moment) */
-#define VER_BUILD		163
+#define VER_BUILD		233
 #define VER_MINOR		3
 #define VER_MAJOR		0
 
@@ -89,7 +89,7 @@
 #define DEFAULT_MAX7219_SS_PIN 4
 #define DEFAULT_MAX7219_COUNT 5
 #define DEFAULT_MAX7219_ZONES 1
-#define DEFAULT_MAX7219_MAXZONES 5
+#define DEFAULT_MAX7219_MAXZONES 10 // Needs to change in helper.js too
 #define DEFAULT_MAX7219_TEXT ""
 #define DEFAULT_MAX7219_INVERT 0
 #define DEFAULT_MAX7219_INTENSITY 7

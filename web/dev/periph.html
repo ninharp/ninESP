@@ -13,6 +13,9 @@
     <!-- Bootstrap core CSS -->
     <!-- build:css bootstrap-core.css -->
     <link href="bootstrap-core.css" rel="stylesheet">
+    <!-- endbuild -->
+
+    <!-- build:css style.css -->
     <link href="style.css" rel="stylesheet">
     <!-- endbuild -->
     
@@ -56,7 +59,7 @@
         <div class="col-lg-6 col-md-offset-3">
 		<div class="alert alert-warning" role="alert">Changes will be applied after reboot</div>
         <h2>Peripheral Settings</h2>
-            <form method="POST" action="">
+            <form method="POST" action="" id="periph">
                 <fieldset>
                     <legend>Choose your connected peripherals</legend>
                     <div class="col-md-offset">
@@ -210,9 +213,16 @@
 	                          <label>Topic Prefix</label>
 	                          <input class="form-control" style="width: 250px" type="text" name="max7219_prefix" value="{max7219_prefix}"><br/>
 	                          <label>Zone Definitions</label>
-	                          <div class="input_zones_wrap col-md-offset-2"><div id="zone-count"></div>
-									    <button class="add_zone_button">Add More Zones</button>
-    									 <div>Zone 1<input type="text" class="form-control" style="width: 60px" name="zone1" value="0"/></div>
+	                          	<div class="col-md-offset-2">
+											<div class="zone_container">
+												<div>
+													<font class="zone_text">Zone 0</font>
+													<input class="zone_num" type="text" name="max7219_zone0" value="{max7219_zone0}">
+													<font class="zone_text"><script>document.writeln($('input[name=max7219_prefix]').val()+"0/#");</script></font>
+												</div>
+											</div>
+											<button class="add_zone_field">Add New Zone &nbsp; <span style="font-size:16px; font-weight:bold;">+ </span></button>
+											<input type="hidden" name="max7219_zones" value="{max7219_zones}">										
 										</div>
 	                          <table border="0">
 	                          <tr>
