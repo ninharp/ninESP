@@ -299,7 +299,7 @@ void sensorPublish()
 void startMqttClient()
 {
 	// 1. [Setup]
-	if(!mqtt.setWill("last/will", "The connection from this device is lost:(", 1, true)) {
+	if(!mqtt.setWill(AppSettings.mqtt_topic_lwt, "offline", 2, true)) {
 		debugf("Unable to set the last will and testament. Most probably there is not enough memory on the device.");
 	}
 
@@ -326,19 +326,11 @@ void startMqttClient()
 
 	// 2. [Connect]
 	char mqtt_url[100] = {0};
-	sprintf(mqtt_url, "mqtt://%s:%s@%s:%d", AppSettings.mqtt_login.c_str(), AppSettings.mqtt_password.c_str(), AppSettings.mqtt_server.c_str(), AppSettings.mqtt_port);
+	bool mqtt_ssl = false; // TODO: Add to webif
+	sprintf(mqtt_url, "mqtt%s://%s:%s@%s:%d", mqtt_ssl ? "s" : "", AppSettings.mqtt_login.c_str(), AppSettings.mqtt_password.c_str(), AppSettings.mqtt_server.c_str(), AppSettings.mqtt_port);
 	//std::string buffAsStdStr = buff;
 	URL url(mqtt_url);
 	Serial.printf("Connecting to \t%s\n", url.toString().c_str());
-
-	//mqtt->setEnabled(true); //TODO
-	/* Set LWT message and topic */
-	/*
-	if(!mqtt->setWill(AppSettings.mqtt_topic_lwt, "offline", 2, true)) {
-		debugf("Unable to set the last will and testament. Most probably there is not enough memory on the device.");
-	} else {
-		debugf("MQTT LWT set");
-	}*/
 
 	if (mqtt.connect(url, AppSettings.mqtt_userid)) {
 		debugf("MQTT Successfully connected!");
@@ -354,7 +346,7 @@ void startMqttClient()
 	}
 
 	/* Publish LWT message */
-	//mqtt->publishWithQoS(AppSettings.mqtt_topic_lwt, WifiStation.getIP().toString(), 1, true);
+	mqtt->publishWithQoS(AppSettings.mqtt_topic_lwt, WifiStation.getIP().toString(), 1, true);
 
 	/* If relay is attached and enabled in settings */
 	if (AppSettings.relay) {
