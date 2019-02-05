@@ -328,7 +328,6 @@ void startMqttClient()
 	char mqtt_url[100] = {0};
 	bool mqtt_ssl = false; // TODO: Add to webif
 	sprintf(mqtt_url, "mqtt%s://%s:%s@%s:%d", mqtt_ssl ? "s" : "", AppSettings.mqtt_login.c_str(), AppSettings.mqtt_password.c_str(), AppSettings.mqtt_server.c_str(), AppSettings.mqtt_port);
-	//std::string buffAsStdStr = buff;
 	URL url(mqtt_url);
 	Serial.printf("Connecting to \t%s\n", url.toString().c_str());
 
@@ -346,7 +345,7 @@ void startMqttClient()
 	}
 
 	/* Publish LWT message */
-	mqtt->publishWithQoS(AppSettings.mqtt_topic_lwt, WifiStation.getIP().toString(), 1, true);
+	mqtt.publishWithQoS(AppSettings.mqtt_topic_lwt, WifiStation.getIP().toString(), 1, true);
 
 	/* If relay is attached and enabled in settings */
 	if (AppSettings.relay) {
