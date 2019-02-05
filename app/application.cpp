@@ -299,7 +299,7 @@ void sensorPublish()
 void startMqttClient()
 {
 	// 1. [Setup]
-	if(!mqtt.setWill("last/will", "The connection from this device is lost:(", 1, true)) {
+	if(!mqtt.setWill(AppSettings.mqtt_topic_lwt, "offline", 2, true)) {
 		debugf("Unable to set the last will and testament. Most probably there is not enough memory on the device.");
 	}
 
@@ -330,15 +330,6 @@ void startMqttClient()
 	//std::string buffAsStdStr = buff;
 	URL url(mqtt_url);
 	Serial.printf("Connecting to \t%s\n", url.toString().c_str());
-
-	//mqtt->setEnabled(true); //TODO
-	/* Set LWT message and topic */
-	/*
-	if(!mqtt->setWill(AppSettings.mqtt_topic_lwt, "offline", 2, true)) {
-		debugf("Unable to set the last will and testament. Most probably there is not enough memory on the device.");
-	} else {
-		debugf("MQTT LWT set");
-	}*/
 
 	if (mqtt.connect(url, AppSettings.mqtt_userid)) {
 		debugf("MQTT Successfully connected!");
