@@ -21,13 +21,14 @@ void startMqttClient();
 void onReceiveUDP(UdpConnection& connection, char *data, int size, IPAddress remoteIP, uint16_t remotePort);
 void statusLed(bool state);
 void motionSensorCheck();
+void checkMQTTConnection(TcpClient& client, bool flag);
 int splitString(String &what, int delim,  String *splits);
 
 /* LCD Display instance */
 LiquidCrystal_I2C *lcd; //(0x27);
 
 /* MQTT client instance */
-MqttClient *mqtt;
+MqttClient mqtt(true, false);
 
 /* MD Parola/MAX72xx LED Matrix instance */
 MD_Parola *led;
@@ -62,7 +63,6 @@ long lastKeyPress = 0;
 Timer relayTimer;
 
 DefferedObject<MD_Parola> ledPtr;
-DefferedObject<MqttClient> mqttPtr;
 DefferedObject<LiquidCrystal_I2C> lcdPtr;
 
 /* IRQ Callback for interrupt of key input */
@@ -97,7 +97,7 @@ void serialShowInfo() {
 void relayTimerCb()
 {
 	relay.set(false);
-	mqtt->publish(AppSettings.relay_topic_pub, "0", true);
+	mqtt.publish(AppSettings.relay_topic_pub, "0", true);
 }
 
 /* Callback for UDP Receiving */
@@ -110,7 +110,7 @@ void onReceiveUDP(UdpConnection& connection, char *data, int size, IPAddress rem
 			//debugf("UDP Relay %c", data[2]);
 			uint8_t state = String(data[2]).toInt();
 			relay.set(state);
-			mqtt->publish(AppSettings.relay_topic_pub, String(data[2]), true);
+			mqtt.publish(AppSettings.relay_topic_pub, String(data[2]), true);
 			String ret = WifiStation.getMAC() + "," + data[0] + "," + WifiStation.getIP().toString() + "," + data[0] + "," + data[2];
 			udp.sendStringTo(remoteIP, remotePort, ret);
 			remoteIP[3] = 255;
@@ -130,7 +130,7 @@ void onReceiveUDP(UdpConnection& connection, char *data, int size, IPAddress rem
 				relay.set(true);
 				relayTimer.initializeMs(ms.toInt(), relayTimerCb).startOnce();
 				//debugf("UDP Relay Timer %d ms", ms.toInt());
-				mqtt->publish(AppSettings.relay_topic_pub, "0", true);
+				mqtt.publish(AppSettings.relay_topic_pub, "0", true);
 				String ret = WifiStation.getMAC() + "," + data[0] + "," + WifiStation.getIP().toString() + "," + data[0] + "," + ms.toInt();
 				udp.sendStringTo(remoteIP, remotePort, ret);
 			}
@@ -158,7 +158,7 @@ void onMQTTMessageReceived(String topic, String message)
 			//	startMqttClient(); // Auto reconnect
 
 			/* Publish current relay state */
-			mqtt->publish(AppSettings.relay_topic_pub, "1", true);
+			mqtt.publish(AppSettings.relay_topic_pub, "1", true);
 		} else if (message.equals("off") || message.equals("0")) { // Relay OFF
 			/* Set relay to off */
 			relay.set(false);
@@ -168,7 +168,7 @@ void onMQTTMessageReceived(String topic, String message)
 
 			/* Publish current relay state */
 			//TODO problem?
-			mqtt->publish(AppSettings.relay_topic_pub, "0", true);
+			mqtt.publish(AppSettings.relay_topic_pub, "0", true);
 		}
 	}
 
@@ -285,11 +285,11 @@ void sensorPublish()
 		/* If publishing of ADC Values is enabled, then publish */
 		if (AppSettings.adc_pub) {
 			/* Check mqtt connection status */
-			if (mqtt->getConnectionState() != eTCS_Connected)
+			if (mqtt.getConnectionState() != eTCS_Connected)
 				startMqttClient(); // Auto reconnect
 
 			/* Publish mqtt adc value */
-			mqtt->publish(AppSettings.adc_topic, String(a), true);
+			mqtt.publish(AppSettings.adc_topic, String(a), true);
 			//debugf("sensorPublish() ADC published");
 		}
 	}
@@ -298,29 +298,68 @@ void sensorPublish()
 /* Start MQTT client and publish/subscribe to the used services */
 void startMqttClient()
 {
-	mqttPtr.Construct(AppSettings.mqtt_server, AppSettings.mqtt_port, onMQTTMessageReceived);
-	mqtt = &mqttPtr.value;
+	// 1. [Setup]
+	if(!mqtt.setWill("last/will", "The connection from this device is lost:(", 1, true)) {
+		debugf("Unable to set the last will and testament. Most probably there is not enough memory on the device.");
+	}
+
+	mqtt.setCompleteDelegate(checkMQTTConnection);
+	mqtt.setCallback(onMQTTMessageReceived);
+
+#ifdef ENABLE_SSL
+	mqtt.addSslOptions(SSL_SERVER_VERIFY_LATER);
+
+#include <ssl/private_key.h>
+#include <ssl/cert.h>
+
+	mqtt.setSslKeyCert(default_private_key, default_private_key_len, default_certificate, default_certificate_len, NULL,
+					   /*freeAfterHandshake*/ false);
+
+#endif
+
+	/*
+	// For testing purposes, try a few different URL formats
+	#define MQTT_URL1 "mqtt://attachix.com:1883"
+	#define MQTT_URL2 "mqtts://attachix.com:8883" // (Need ENABLE_SSL)
+	#define MQTT_URL3 "mqtt://frank:fiddle@192.168.100.107:1883"
+	*/
+
+	// 2. [Connect]
+	char mqtt_url[100] = {0};
+	sprintf(mqtt_url, "mqtt://%s:%s@%s:%d", AppSettings.mqtt_login.c_str(), AppSettings.mqtt_password.c_str(), AppSettings.mqtt_server.c_str(), AppSettings.mqtt_port);
+	//std::string buffAsStdStr = buff;
+	URL url(mqtt_url);
+	Serial.printf("Connecting to \t%s\n", url.toString().c_str());
 
 	//mqtt->setEnabled(true); //TODO
 	/* Set LWT message and topic */
+	/*
 	if(!mqtt->setWill(AppSettings.mqtt_topic_lwt, "offline", 2, true)) {
 		debugf("Unable to set the last will and testament. Most probably there is not enough memory on the device.");
 	} else {
 		debugf("MQTT LWT set");
+	}*/
+
+	if (mqtt.connect(url, AppSettings.mqtt_userid)) {
+		debugf("MQTT Successfully connected!");
+	} else {
+		debugf("MQTT Connection failed!");
 	}
 
-	mqtt->connect(AppSettings.mqtt_userid, AppSettings.mqtt_login, AppSettings.mqtt_password);
-
 	/* Subscribe to client command topic for general commands */
-	mqtt->subscribe(AppSettings.mqtt_topic_cmd);
+	if (mqtt.subscribe(AppSettings.mqtt_topic_cmd)) {
+		debugf("MQTT General Command Subscription successful!");
+	} else {
+		debugf("MQTT General Command Subscription failed!");
+	}
 
 	/* Publish LWT message */
-	mqtt->publishWithQoS(AppSettings.mqtt_topic_lwt, WifiStation.getIP().toString(), 1, true);
+	//mqtt->publishWithQoS(AppSettings.mqtt_topic_lwt, WifiStation.getIP().toString(), 1, true);
 
 	/* If relay is attached and enabled in settings */
 	if (AppSettings.relay) {
 		/* Publish current relay state to mqtt */
-		mqtt->publish(AppSettings.relay_topic_pub, String(relay.get()), true);
+		mqtt.publish(AppSettings.relay_topic_pub, String(relay.get()), true);
 		//TODO: Add relay config key, key_pin, relay_pin, ...
 		/* Attach interrupt if enabled in config */
 		//attachInterrupt(KEY_INPUT_PIN, keyIRQHandler, CHANGE);
@@ -329,7 +368,7 @@ void startMqttClient()
 			/* Check if topic backup is set */
 			//if (AppSettings.relay_topic_cmd_old.length() > 0)
 			//	mqtt->unsubscribe(AppSettings.relay_topic_cmd_old); /* Unsubscribe backup relay topic, for changes in webinterface */
-			mqtt->subscribe(AppSettings.relay_topic_cmd); /* Resubscribe relay topic */
+			mqtt.subscribe(AppSettings.relay_topic_cmd); /* Resubscribe relay topic */
 			/* Set backup relay topic to current relay topic */
 			AppSettings.relay_topic_cmd_old = AppSettings.relay_topic_cmd;
 		} else {
@@ -339,7 +378,7 @@ void startMqttClient()
 
 	if (AppSettings.rcswitch) {
 		//TODO: Check if topic prefix got already trailing / and/or #
-		mqtt->subscribe(AppSettings.rcswitch_topic_prefix + "#");
+		mqtt.subscribe(AppSettings.rcswitch_topic_prefix + "#");
 		rcSwitch.enableTransmit(AppSettings.rcswitch_pin);
 	} else {
 		//mqtt->unsubscribe(AppSettings.rcswitch_topic_prefix + "#");
@@ -347,7 +386,7 @@ void startMqttClient()
 	}
 
 	if (AppSettings.max7219) {
-		mqtt->subscribe(AppSettings.max7219_topic_prefix + "#");
+		mqtt.subscribe(AppSettings.max7219_topic_prefix + "#");
 		/*mqtt->subscribe(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_enable);
 		mqtt->subscribe(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_text);
 		mqtt->subscribe(AppSettings.max7219_topic_prefix + AppSettings.max7219_topic_charwidth);
@@ -370,11 +409,19 @@ void startServices()
 	}
 }
 
-void checkMQTTConnection()
+void checkMQTTConnection(TcpClient& client, bool flag)
 {
 	/* Check if MQTT Connection is still alive */
-	if (mqtt->getConnectionState() != eTCS_Connected)
+	if (flag == true)
+		debugf("MQTT Connection died! Reconnecting! %d", mqtt.getConnectionState());
 		startMqttClient(); /* Auto reconnect */
+}
+
+void checkMQTTDisconnect()
+{
+	if(mqtt.getConnectionState() != eTCS_Connected) {
+			startMqttClient(); // Auto reconnect
+	}
 }
 
 /* Start mDNS Server using ESP8266 SDK functions */
@@ -444,9 +491,7 @@ void debounceKey()
 
 		if (key_pressed) {
 			relay.set(!relay.get()); // toggle relay
-			if (mqtt->getConnectionState() != eTCS_Connected) //TODO
-				startMqttClient(); // Auto reconnect
-			mqtt->publish(AppSettings.relay_topic_pub, String(relay.get()), true); // send actual state to broker
+			mqtt.publish(AppSettings.relay_topic_pub, String(relay.get()), true); // send actual state to broker
 			lastKeyPress = millis(); // reset last key press millis
 			key_pressed = false; // reset key_pressed value
 			interrupts(); // re-enable the interrupts
@@ -546,7 +591,7 @@ void connectOk(IPAddress ip, IPAddress mask, IPAddress gateway)
 			}
 
 			/* Start timer which checks the connection to MQTT */
-			checkConnectionTimer.initializeMs(DEFAULT_CONNECT_CHECK_INTERVAL, checkMQTTConnection).start();
+			checkConnectionTimer.initializeMs(3000, checkMQTTDisconnect).start();
 
 			//stopAP(); TODO: When to stop AP? Or manually triggered in webinterface?
 		}
@@ -603,18 +648,18 @@ void motionSensorCheck()
 	if (digitalRead(AppSettings.motion_pin) == AppSettings.motion_invert) {
 		if (motionState != true) {
 			motionState = true;
-			if (mqtt->getConnectionState() != eTCS_Connected) //TODO remove autoconnect cause of connCheck timer?
-						startMqttClient(); // Auto reconnect
-			mqtt->publishWithQoS(AppSettings.motion_topic, "1", 1, true);
+			//if (mqtt->getConnectionState() != eTCS_Connected) //TODO remove autoconnect cause of connCheck timer?
+			//			startMqttClient(); // Auto reconnect
+			mqtt.publishWithQoS(AppSettings.motion_topic, "1", 1, true);
 			debugf("Motion ON (%s)", AppSettings.motion_topic.c_str());
 		}
 		//digitalWrite(14, 1);
 	} else {
 		if (motionState != false) {
 			motionState = false;
-			if (mqtt->getConnectionState() != eTCS_Connected)
-						startMqttClient(); // Auto reconnect
-			mqtt->publishWithQoS(AppSettings.motion_topic, "0", 1, true);
+			//if (mqtt->getConnectionState() != eTCS_Connected)
+			//			startMqttClient(); // Auto reconnect
+			mqtt.publishWithQoS(AppSettings.motion_topic, "0", 1, true);
 			debugf("Motion OFF (%s)", AppSettings.motion_topic.c_str());
 		}
 		//digitalWrite(14, 0);

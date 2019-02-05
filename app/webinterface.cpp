@@ -29,7 +29,7 @@ String wNetwork, wPassword;
 /* Last modified string for webinterface */
 String lastModified;
 
-extern MqttClient *mqtt;
+//extern MqttClient *mqtt;
 
 void startWebServer();
 void startFTP();

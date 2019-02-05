@@ -6,10 +6,10 @@ MODULES = app MD_Parola/src MD_MAX72XX/src
 EXTRA_INCDIR = include MD_Parola/src MD_MAX72XX/src
 
 ## ESP_HOME sets the path where ESP tools and SDK are located.
-ESP_HOME = /opt/esp-open-sdk
+#ESP_HOME = /opt/esp-open-sdk
 
 ## SMING_HOME sets the path where Sming framework is located.
-SMING_HOME = /opt/Sming/Sming
+#SMING_HOME = /opt/Sming/Sming
 
 ## COM port parameter is reqruied to flash firmware correctly.
 COM_PORT = /dev/ttyUSB0
@@ -28,7 +28,7 @@ SPIFF_FILES = web/build
 
 #### overridable rBoot options ####
 ## use rboot build mode
-RBOOT_ENABLED ?= 0
+RBOOT_ENABLED ?= 1
 ## enable big flash support (for multiple roms, each in separate 1mb block of flash)
 RBOOT_BIG_FLASH ?= 1
 ## two rom mode (where two roms sit in the same 1mb block of flash)

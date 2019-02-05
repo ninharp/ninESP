@@ -6,7 +6,7 @@ environment/project/cdt.managedbuild.toolchain.gnu.mingw.base.1135534147/PATH/de
 environment/project/cdt.managedbuild.toolchain.gnu.mingw.base.1135534147/PATH/operation=replace
 environment/project/cdt.managedbuild.toolchain.gnu.mingw.base.1135534147/PATH/value=/bin\:/usr/local/sbin\:/usr/local/bin\:/usr/bin\:/usr/local/go/bin\:/usr/lib/jvm/default/bin\:/opt/marytts/bin\:/opt/opencascade/bin\:/usr/bin/site_perl\:/usr/bin/vendor_perl\:/usr/bin/core_perl\:/home/michael/Binaries\:
 environment/project/cdt.managedbuild.toolchain.gnu.mingw.base.1135534147/SMING_HOME/delimiter=\:
-environment/project/cdt.managedbuild.toolchain.gnu.mingw.base.1135534147/SMING_HOME/operation=append
-environment/project/cdt.managedbuild.toolchain.gnu.mingw.base.1135534147/SMING_HOME/value=/opt/Sming/Sming
+environment/project/cdt.managedbuild.toolchain.gnu.mingw.base.1135534147/SMING_HOME/operation=replace
+environment/project/cdt.managedbuild.toolchain.gnu.mingw.base.1135534147/SMING_HOME/value=${PWD}/Sming/Sming
 environment/project/cdt.managedbuild.toolchain.gnu.mingw.base.1135534147/append=true
 environment/project/cdt.managedbuild.toolchain.gnu.mingw.base.1135534147/appendContributed=true
