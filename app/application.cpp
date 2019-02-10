@@ -418,7 +418,6 @@ void checkMQTTDisconnect()
 }
 
 /* Start mDNS Server using ESP8266 SDK functions */
-/*
 void startmDNS(IPAddress ip)
 {
     struct mdns_info *info = (struct mdns_info *)os_zalloc(sizeof(struct mdns_info));
@@ -435,7 +434,7 @@ void stopmDNS()
 {
 	espconn_mdns_close();
 }
-*/
+
 
 /* Sets Wifi Accesspoint Settings and start it */
 void startAP()
@@ -443,13 +442,12 @@ void startAP()
 	/* Put on Setup LED Indicator to indicate running ap */
 	statusLed(true);
 
-	/* Start AP for configuration */
-	WifiAccessPoint.enable(true);
-	WifiAccessPoint.config(NINHOME_AP_NAME, "", AUTH_OPEN);
+	//disable watchdog
+	WDT.enable(false);
 
-	//TODO: activate mDNS on startAP()
-	/* Start mDNS server on Wifi Accesspoint IP */
-	//startmDNS(WifiAccessPoint.getIP());
+	/* Start AP for configuration */
+	//WifiAccessPoint.enable(true);
+	WifiAccessPoint.config(NINHOME_AP_NAME, "", AUTH_OPEN);
 }
 
 /* Stop Wifi Accesspoint if running */
@@ -739,6 +737,22 @@ int splitString(String &what, int delim,  String *splits)
   return pieceCount;
 }
 
+// Will be called when WiFi hardware and software initialization was finished
+// And system initialization was completed
+void ready()
+{
+	debugf("READY!");
+
+	//TODO: activate mDNS on startAP()
+	/* Start mDNS server on Wifi Accesspoint IP */
+	//startmDNS(WifiAccessPoint.getIP());
+
+	startWebinterface();
+
+	// If AP is enabled:
+	debugf("AP. ip: %s mac: %s", WifiAccessPoint.getIP().toString().c_str(), WifiAccessPoint.getMAC().c_str());
+}
+
 void init()
 {
 	/* Mount file system, in order to work with files */
@@ -803,6 +817,7 @@ void init()
 	/* Enable Wifi Client, even if none is set. Just to scan out existing networks */
     WifiStation.enable(true, false);
     WifiAccessPoint.enable(false, false);
+
 	/* Enable Wifi Scanning and process in "networkScanCompleted" callback function */
   	WifiStation.startScan(networkScanCompleted);
 
@@ -918,6 +933,7 @@ void init()
 	}
 
 	/* Register onReady callback to run services on system ready */
-	System.onReady(startWebinterface);
+	System.onReady(ready);
+
 
 }

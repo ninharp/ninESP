@@ -3,7 +3,6 @@
 	<name>ninHOME_Node</name>
 	<comment></comment>
 	<projects>
-		<project>SmingFramework</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

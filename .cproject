@@ -44,10 +44,10 @@
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.1999763015" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler">
 								<option id="gnu.cpp.compiler.option.include.paths.611746109" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${ESP_HOME}/sdk/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${SMING_HOME}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${SMING_HOME}/Libraries&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${SMING_HOME}/system/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ESP_HOME}/sdk/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ninHOME_Node/MD_MAX72XX/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ninHOME_Node/MD_Parola/src}&quot;"/>
 								</option>
@@ -83,9 +83,7 @@
 					</folderInfo>
 				</configuration>
 			</storageModule>
-			<storageModule moduleId="org.eclipse.cdt.core.externalSettings">
-				<externalSettings containerId="SmingFramework;" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier"/>
-			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
 		</cconfiguration>
 	</storageModule>
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
