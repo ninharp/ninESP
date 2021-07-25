@@ -20,6 +20,9 @@ jobs:
       with:
         release: '10-2020-q4' 
         
+    - name: Set Environment Variables
+      run: sh ./set_environment.sh
+        
     - name: Patch MD Libraries
       run: sh ./patch-linux.sh
         
