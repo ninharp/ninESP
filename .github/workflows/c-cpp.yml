@@ -13,32 +13,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
     
     - name: Install ARM Toolchain
       uses: ryanwinter/arm-none-eabi-gcc@master
       with:
         release: '10-2020-q4' 
     
-    - name: Checkout Sming Framework
-      uses: actions/checkout@v2.3.4
-      with:
-        repository: SmingHub/Sming
-        ref: 28b05f15700e05e143a9b50d421debd3252171f9
-        
-    - name: Checkout MD MAX72XX
-      uses: actions/checkout@v2.3.4
-      with:
-        repository: MajicDesigns/MD_MAX72XX
-        ref: f01c78381438ee5c351646beee560e5b636ee053
-    
-    - name: Checkout MD Parola
-      uses: actions/checkout@v2.3.4
-      with:
-        repository: MajicDesigns/MD_Parola
-        ref: 32e42be19f3837ba8c69b0a6895d031e593ccb2a
-    
-    - name: Patching MD Libraries
-      run: chmod +x patch-linux.sh && ./patch-linux.sh 
-      
-    - name: make all
-      run: make all
