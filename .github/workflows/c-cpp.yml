@@ -26,6 +26,9 @@ jobs:
     - name: Patch MD Libraries
       run: sh ./patch-linux.sh
       
+    - name: Install Prerequisites
+      run: sudo apt-get install make unrar-free autoconf automake libtool gcc g++ gperf flex bison texinfo gawk ncurses-dev libexpat-dev python-dev python python-serial sed git unzip bash help2man wget bzip2
+      
     - name: Build Open ESP SDK
       run: cd esp-open-sdk && make
       
