@@ -7,7 +7,7 @@ MODULES = app MD_Parola/src MD_MAX72XX/src
 EXTRA_INCDIR = include MD_Parola/src MD_MAX72XX/src
 
 ## ESP_HOME sets the path where ESP tools and SDK are located.
-ESP_HOME = /opt/esp-open-sdk
+ESP_HOME = esp-open-sdk
 
 ## SMING_HOME sets the path where Sming framework is located.
 SMING_HOME = Sming/Sming
