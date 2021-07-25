@@ -1,4 +1,4 @@
-name: C/C++ CI
+name: Build Pipeline
 
 on:
   push:
@@ -8,7 +8,6 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -20,4 +19,9 @@ jobs:
       uses: ryanwinter/arm-none-eabi-gcc@master
       with:
         release: '10-2020-q4' 
-    
+        
+    - name: Patch MD Libraries
+      run: sh ./patch-linux.sh
+        
+    - name: Make all
+      run: make all
