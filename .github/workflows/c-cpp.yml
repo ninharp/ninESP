@@ -25,6 +25,9 @@ jobs:
         
     - name: Patch MD Libraries
       run: sh ./patch-linux.sh
-        
+      
+    - name: Build Open ESP SDK
+      run: cd esp-open-sdk && make
+      
     - name: Make all
       run: make all
