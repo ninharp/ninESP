@@ -1,3 +1,5 @@
+![Build Pipeline](https://github.com/ninharp/ninESP/actions/workflows/c-cpp.yml/badge.svg)
+
 # Introduction
 
 ninESP is a modular firmware for ESP8266 SoC based on SmingFramework.
